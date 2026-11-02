@@ -126,7 +126,7 @@ function Index() {
       <header className="mb-8 text-center">
         <img src={logo.url} alt="ACTES" className="mx-auto mb-4 h-14 w-auto object-contain sm:h-16" />
         <h1 className="text-3xl font-bold sm:text-4xl">
-          مكتبة <span className="text-primary">الكتالوجات</span>
+          مكتبة <span className="text-blue-500">الكتالوجات</span>
         </h1>
         <p className="mt-2 text-muted-foreground">ابحث عن كتالوج المنتج</p>
         {saved && (
