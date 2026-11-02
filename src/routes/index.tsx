@@ -118,7 +118,7 @@ function Index() {
                       <FileText className="h-12 w-12 text-muted-foreground" />
                     </div>
                   )}
-                  <span className={`absolute right-2 top-2 rounded-full px-2.5 py-0.5 text-xs font-bold ${c.language === "en" ? "bg-muted-foreground text-background" : "bg-destructive text-destructive-foreground"}`}>
+                  <span className={`absolute right-2 top-2 rounded-full px-2.5 py-0.5 text-xs font-bold ${c.language === "en" ? "bg-blue-600 text-white" : "bg-destructive text-destructive-foreground"}`}>
                     {c.language === "en" ? "English" : "عربي"}
                   </span>
                 </div>

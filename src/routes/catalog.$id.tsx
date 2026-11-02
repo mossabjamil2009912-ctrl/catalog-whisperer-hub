@@ -42,7 +42,7 @@ function CatalogPage() {
       </Link>
       <h1 className="text-2xl font-bold">{c.title}</h1>
       <p className="mt-1 flex items-center gap-2 text-sm text-primary">
-        <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${c.language === "en" ? "bg-muted-foreground text-background" : "bg-destructive text-destructive-foreground"}`}>
+        <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${c.language === "en" ? "bg-blue-600 text-white" : "bg-destructive text-destructive-foreground"}`}>
           {c.language === "en" ? "English" : "عربي"}
         </span>
         {c.category}
