@@ -5,23 +5,31 @@ import { Download, ExternalLink, Loader2, Share2, X } from "lucide-react";
 import { toast } from "sonner";
 import { getCatalog } from "@/lib/catalog.functions";
 import { PdfPages } from "@/components/PdfPages";
+import { loadCatalogInfo, pushRecent } from "@/lib/pdf-cache";
 
 type Cat = Awaited<ReturnType<typeof getCatalog>>;
 
-export function CatalogViewer({ id, onClose }: { id: string | null; onClose: () => void }) {
+export function CatalogViewer({ id, cover, onClose }: { id: string | null; cover?: string | null; onClose: () => void }) {
   const fetchCatalog = useServerFn(getCatalog);
   const [c, setC] = useState<Cat>(null);
 
   useEffect(() => {
     if (!id) return;
     setC(null);
-    fetchCatalog({ data: { id } }).then(setC).catch(() => toast.error("تعذر فتح الكتالوج"));
+    pushRecent(id);
+    loadCatalogInfo(id, fetchCatalog).then(setC).catch(() => toast.error("تعذر فتح الكتالوج"));
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    // Phone back button closes the viewer instead of leaving the site.
+    window.history.pushState({ viewer: id }, "");
+    const onPop = () => onClose();
     window.addEventListener("keydown", onKey);
+    window.addEventListener("popstate", onPop);
     document.body.style.overflow = "hidden";
     document.body.dataset["viewer"] = "open";
     return () => {
       window.removeEventListener("keydown", onKey);
+      window.removeEventListener("popstate", onPop);
+      if (window.history.state?.viewer === id) window.history.back();
       document.body.style.overflow = "";
       delete document.body.dataset["viewer"];
     };
@@ -35,9 +43,9 @@ export function CatalogViewer({ id, onClose }: { id: string | null; onClose: () 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/60 p-2 sm:p-6" onClick={onClose}>
+    <div className="viewer-fade fixed inset-0 z-50 flex items-center justify-center bg-foreground/60 p-2 sm:p-6" onClick={onClose}>
       <div
-        className="flex h-full max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-glow"
+        className="viewer-slide flex h-full max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-glow"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex flex-wrap items-center gap-2 border-b border-border p-2 sm:p-3">
