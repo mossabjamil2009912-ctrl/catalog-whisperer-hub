@@ -74,7 +74,7 @@ export function CatalogViewer({ id, cover, onClose }: { id: string | null; cover
         </div>
         <div className="min-h-0 flex-1 bg-muted">
           {c?.file_url ? (
-            <PdfPages id={id} url={c.file_url} cover={cover} />
+            <PdfPages id={id} url={c.file_url} cover={cover ?? null} />
           ) : (
             <div className="flex h-full items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
