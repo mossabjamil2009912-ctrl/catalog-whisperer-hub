@@ -1,24 +1,131 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useMemo, useState } from "react";
+import { FileText, Search } from "lucide-react";
+import { listCatalogs, searchCatalogs } from "@/lib/catalog.functions";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+export const catalogsQuery = queryOptions({ queryKey: ["catalogs"], queryFn: () => listCatalogs() });
+
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "مكتبة الكتالوجات — كل منتجاتنا في مكان واحد" },
+      { name: "description", content: "ابحث في جميع كتالوجات منتجاتنا واسأل المساعد الذكي عن أي مواصفة." },
+      { property: "og:title", content: "مكتبة الكتالوجات" },
+      { property: "og:description", content: "ابحث في جميع كتالوجات منتجاتنا واسأل المساعد الذكي." },
+    ],
+  }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(catalogsQuery),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
+const norm = (s: string) => s.toLowerCase().replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي");
+
 function Index() {
+  const { data } = useSuspenseQuery(catalogsQuery);
+  const search = useServerFn(searchCatalogs);
+  const [q, setQ] = useState("");
+  const [cat, setCat] = useState<string | null>(null);
+  const [fuzzy, setFuzzy] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!q.trim()) return setFuzzy([]);
+    const t = setTimeout(() => search({ data: { q } }).then(setFuzzy).catch(() => {}), 250);
+    return () => clearTimeout(t);
+  }, [q, search]);
+
+  const results = useMemo(() => {
+    let list = data.catalogs;
+    if (cat) list = list.filter((c) => c.category_id === cat);
+    if (!q.trim()) return list;
+    const words = norm(q).split(/\s+/).filter(Boolean);
+    const direct = list.filter((c) => {
+      const hay = norm(`${c.title} ${c.keywords} ${c.description}`);
+      return words.every((w) => hay.includes(w));
+    });
+    const ids = new Set(direct.map((c) => c.id));
+    const extra = fuzzy.map((id) => list.find((c) => c.id === id)).filter((c) => c && !ids.has(c.id));
+    return [...direct, ...(extra as typeof list)];
+  }, [data.catalogs, q, cat, fuzzy]);
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
+    <main className="mx-auto min-h-screen max-w-6xl px-4 pb-28 pt-10">
+      <header className="mb-8 text-center">
+        <h1 className="text-3xl font-bold sm:text-4xl">
+          مكتبة <span className="text-primary">الكتالوجات</span>
+        </h1>
+        <p className="mt-2 text-muted-foreground">ابحث باسم المنتج أو أي معلومة بداخله</p>
+      </header>
+
+      <div className="relative mx-auto mb-5 max-w-2xl">
+        <Search className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="مثال: سوليس 50"
+          className="w-full rounded-2xl border border-input bg-card py-4 pl-4 pr-12 text-lg outline-none transition focus:border-primary focus:shadow-glow"
+        />
+      </div>
+
+      {data.categories.length > 0 && (
+        <div className="mb-8 flex gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:justify-center">
+          <Chip active={!cat} onClick={() => setCat(null)}>الكل</Chip>
+          {data.categories.map((c) => (
+            <Chip key={c.id} active={cat === c.id} onClick={() => setCat(c.id)}>
+              {c.name}
+            </Chip>
+          ))}
+        </div>
+      )}
+
+      {results.length === 0 ? (
+        <div className="py-20 text-center text-muted-foreground">
+          {data.catalogs.length === 0 ? "لا توجد كتالوجات بعد." : "لا توجد نتائج — جرّب سؤال المساعد الذكي."}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          {results.map((c) => (
+            <Link
+              key={c.id}
+              to="/catalog/$id"
+              params={{ id: c.id }}
+              className="group overflow-hidden rounded-2xl border border-border bg-card transition hover:-translate-y-1 hover:border-primary hover:shadow-glow"
+            >
+              <div className="aspect-[3/4] bg-muted">
+                {c.cover_url ? (
+                  <img src={c.cover_url} alt={c.title} loading="lazy" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <FileText className="h-12 w-12 text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+              <div className="p-3">
+                <h2 className="line-clamp-2 font-semibold group-hover:text-primary">{c.title}</h2>
+                {c.category_id && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {data.categories.find((x) => x.id === c.category_id)?.name}
+                  </p>
+                )}
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </main>
+  );
+}
+
+function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`shrink-0 rounded-full border px-4 py-2 text-sm transition ${
+        active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:border-primary"
+      }`}
     >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+      {children}
+    </button>
   );
 }
