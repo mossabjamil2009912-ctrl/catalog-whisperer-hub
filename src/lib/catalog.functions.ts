@@ -95,8 +95,10 @@ export const askAssistant = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const sb = await admin();
     const userMsgs = data.messages.filter((m) => m.role === "user");
-    const last = userMsgs[userMsgs.length - 1]?.content ?? "";
-    const prev = userMsgs[userMsgs.length - 2]?.content ?? "";
+    const dg = (s: string) =>
+      s.replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660)).replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
+    const last = dg(userMsgs[userMsgs.length - 1]?.content ?? "");
+    const prev = dg(userMsgs[userMsgs.length - 2]?.content ?? "");
 
     const [{ data: a }, { data: b }, { data: cats }] = await Promise.all([
       sb.rpc("search_chunks", { q: last, lim: 10 }),
