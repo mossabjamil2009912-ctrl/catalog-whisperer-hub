@@ -1,0 +1,243 @@
+import { createServerFn } from "@tanstack/react-start";
+
+const BUCKET = "catalogs";
+
+async function admin() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  return supabaseAdmin;
+}
+
+function checkCode(code: string) {
+  if (code !== "2027") throw new Error("رمز الدخول غير صحيح");
+}
+
+export type CatalogItem = {
+  id: string;
+  title: string;
+  description: string;
+  keywords: string;
+  category_id: string | null;
+  page_count: number;
+  created_at: string;
+  cover_url: string | null;
+};
+
+export const listCatalogs = createServerFn({ method: "GET" }).handler(async () => {
+  const sb = await admin();
+  const [{ data: cats }, { data: rows }] = await Promise.all([
+    sb.from("categories").select("id,name").order("name"),
+    sb.from("catalogs").select("*").order("created_at", { ascending: false }),
+  ]);
+  const list = rows ?? [];
+  const covers = list.map((r) => r.cover_path).filter((p): p is string => !!p);
+  const urlMap = new Map<string, string>();
+  if (covers.length) {
+    const { data } = await sb.storage.from(BUCKET).createSignedUrls(covers, 60 * 60 * 24);
+    data?.forEach((d) => d.path && d.signedUrl && urlMap.set(d.path, d.signedUrl));
+  }
+  const catalogs: CatalogItem[] = list.map((r) => ({
+    id: r.id,
+    title: r.title,
+    description: r.description,
+    keywords: r.keywords,
+    category_id: r.category_id,
+    page_count: r.page_count,
+    created_at: r.created_at,
+    cover_url: r.cover_path ? (urlMap.get(r.cover_path) ?? null) : null,
+  }));
+  return { categories: cats ?? [], catalogs };
+});
+
+export const searchCatalogs = createServerFn({ method: "POST" })
+  .inputValidator((d: { q: string }) => ({ q: String(d.q ?? "").slice(0, 200) }))
+  .handler(async ({ data }) => {
+    if (!data.q.trim()) return [] as string[];
+    const sb = await admin();
+    const { data: rows } = await sb.rpc("search_catalogs", { q: data.q });
+    return (rows ?? []).map((r) => r.id);
+  });
+
+export const getCatalog = createServerFn({ method: "GET" })
+  .inputValidator((d: { id: string }) => ({ id: String(d.id) }))
+  .handler(async ({ data }) => {
+    const sb = await admin();
+    const { data: row } = await sb.from("catalogs").select("*, categories(name)").eq("id", data.id).maybeSingle();
+    if (!row) return null;
+    const { data: file } = await sb.storage.from(BUCKET).createSignedUrl(row.file_path, 60 * 60 * 6);
+    const { data: dl } = await sb.storage
+      .from(BUCKET)
+      .createSignedUrl(row.file_path, 60 * 60 * 6, { download: `${row.title}.pdf` });
+    return {
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      category: (row.categories as { name: string } | null)?.name ?? null,
+      page_count: row.page_count,
+      file_url: file?.signedUrl ?? null,
+      download_url: dl?.signedUrl ?? null,
+    };
+  });
+
+/* ---------- Assistant ---------- */
+
+type Msg = { role: "user" | "assistant"; content: string };
+
+export const askAssistant = createServerFn({ method: "POST" })
+  .inputValidator((d: { messages: Msg[] }) => ({
+    messages: (d.messages ?? []).slice(-10).map((m) => ({
+      role: m.role === "assistant" ? ("assistant" as const) : ("user" as const),
+      content: String(m.content).slice(0, 2000),
+    })),
+  }))
+  .handler(async ({ data }) => {
+    const sb = await admin();
+    const userMsgs = data.messages.filter((m) => m.role === "user");
+    const last = userMsgs[userMsgs.length - 1]?.content ?? "";
+    const prev = userMsgs[userMsgs.length - 2]?.content ?? "";
+
+    const [{ data: a }, { data: b }, { data: cats }] = await Promise.all([
+      sb.rpc("search_chunks", { q: last, lim: 10 }),
+      prev ? sb.rpc("search_chunks", { q: `${prev} ${last}`, lim: 6 }) : Promise.resolve({ data: [] }),
+      sb.from("catalogs").select("id,title,keywords"),
+    ]);
+    const seen = new Set<string>();
+    const chunks = [...(a ?? []), ...((b as typeof a) ?? [])].filter((c) => {
+      const k = `${c.catalog_id}-${c.page}-${c.content.slice(0, 40)}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+
+    const context = chunks
+      .map((c) => `[كتالوج: ${c.title} | id: ${c.catalog_id} | صفحة ${c.page}]\n${c.content}`)
+      .join("\n\n---\n\n");
+    const list = (cats ?? []).map((c) => `- ${c.title}${c.keywords ? ` (${c.keywords})` : ""}`).join("\n");
+
+    const system = `أنت مساعد ذكي لشركة، تعرف كل كتالوجات منتجاتها. أجب بالعربية باختصار ووضوح.
+- اعتمد فقط على المقتطفات المرفقة من الكتالوجات. لا تخترع أرقاماً أو مواصفات.
+- افهم الأسماء المكتوبة بشكل تقريبي (مثل "سوليز 50" = "Solis 50kW").
+- اذكر اسم الكتالوج ورقم الصفحة بعد الإجابة.
+- إذا لم تجد المعلومة فقل بوضوح إنها غير موجودة في الكتالوجات المتاحة.
+
+قائمة الكتالوجات المتاحة:
+${list || "(لا توجد كتالوجات بعد)"}
+
+مقتطفات ذات صلة:
+${context || "(لا توجد مقتطفات مطابقة)"}`;
+
+    const { generateChatCompletion } = await import("@lovable.dev/ai-gateway");
+    try {
+      const res = await generateChatCompletion({
+        model: "openai/gpt-6-astra",
+        messages: [{ role: "system", content: system }, ...data.messages],
+      });
+      const text = res.choices?.[0]?.message?.content;
+      const sources = Array.from(
+        new Map(chunks.slice(0, 4).map((c) => [c.catalog_id, { id: c.catalog_id, title: c.title }])).values(),
+      );
+      return { answer: typeof text === "string" ? text : "عذراً، لم أتمكن من الإجابة.", sources };
+    } catch (e) {
+      console.error(e);
+      return { answer: "عذراً، حدث خطأ مؤقت. حاول مرة أخرى.", sources: [] };
+    }
+  });
+
+/* ---------- Admin ---------- */
+
+export const verifyAdmin = createServerFn({ method: "POST" })
+  .inputValidator((d: { code: string }) => d)
+  .handler(async ({ data }) => {
+    checkCode(data.code);
+    return { ok: true };
+  });
+
+export const createUploadUrls = createServerFn({ method: "POST" })
+  .inputValidator((d: { code: string }) => d)
+  .handler(async ({ data }) => {
+    checkCode(data.code);
+    const sb = await admin();
+    const id = crypto.randomUUID();
+    const filePath = `files/${id}.pdf`;
+    const coverPath = `covers/${id}.jpg`;
+    const [f, c] = await Promise.all([
+      sb.storage.from(BUCKET).createSignedUploadUrl(filePath),
+      sb.storage.from(BUCKET).createSignedUploadUrl(coverPath),
+    ]);
+    if (f.error || c.error) throw new Error("تعذر تجهيز الرفع");
+    return { filePath, coverPath, fileToken: f.data.token, coverToken: c.data.token };
+  });
+
+export const saveCatalog = createServerFn({ method: "POST" })
+  .inputValidator(
+    (d: {
+      code: string;
+      title: string;
+      description: string;
+      keywords: string;
+      category_id: string | null;
+      file_path: string;
+      cover_path: string | null;
+      page_count: number;
+      pages: { page: number; content: string }[];
+    }) => d,
+  )
+  .handler(async ({ data }) => {
+    checkCode(data.code);
+    const sb = await admin();
+    const { data: row, error } = await sb
+      .from("catalogs")
+      .insert({
+        title: data.title,
+        description: data.description,
+        keywords: data.keywords,
+        category_id: data.category_id || null,
+        file_path: data.file_path,
+        cover_path: data.cover_path,
+        page_count: data.page_count,
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    const rows: { catalog_id: string; page: number; content: string }[] = [];
+    for (const p of data.pages) {
+      const text = p.content.replace(/\s+/g, " ").trim();
+      for (let i = 0; i < text.length; i += 1200) {
+        rows.push({ catalog_id: row.id, page: p.page, content: text.slice(Math.max(0, i - 150), i + 1200) });
+      }
+    }
+    for (let i = 0; i < rows.length; i += 500) {
+      await sb.from("catalog_chunks").insert(rows.slice(i, i + 500));
+    }
+    return { id: row.id, chunks: rows.length };
+  });
+
+export const deleteCatalog = createServerFn({ method: "POST" })
+  .inputValidator((d: { code: string; id: string }) => d)
+  .handler(async ({ data }) => {
+    checkCode(data.code);
+    const sb = await admin();
+    const { data: row } = await sb.from("catalogs").select("file_path,cover_path").eq("id", data.id).single();
+    if (row) {
+      await sb.storage.from(BUCKET).remove([row.file_path, ...(row.cover_path ? [row.cover_path] : [])]);
+    }
+    await sb.from("catalogs").delete().eq("id", data.id);
+    return { ok: true };
+  });
+
+export const addCategory = createServerFn({ method: "POST" })
+  .inputValidator((d: { code: string; name: string }) => d)
+  .handler(async ({ data }) => {
+    checkCode(data.code);
+    const sb = await admin();
+    await sb.from("categories").insert({ name: data.name.trim() });
+    return { ok: true };
+  });
+
+export const deleteCategory = createServerFn({ method: "POST" })
+  .inputValidator((d: { code: string; id: string }) => d)
+  .handler(async ({ data }) => {
+    checkCode(data.code);
+    const sb = await admin();
+    await sb.from("categories").delete().eq("id", data.id);
+    return { ok: true };
+  });
