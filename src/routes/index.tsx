@@ -70,7 +70,7 @@ function Index() {
   const openCover = data.catalogs.find((c) => c.id === openId)?.cover_url ?? null;
 
   useEffect(() => {
-    if (!q.trim()) return setFuzzy([]);
+    if (!q.trim()) { setFuzzy([]); return; }
     const t = setTimeout(() => search({ data: { q } }).then(setFuzzy).catch(() => {}), 250);
     return () => clearTimeout(t);
   }, [q, search]);
