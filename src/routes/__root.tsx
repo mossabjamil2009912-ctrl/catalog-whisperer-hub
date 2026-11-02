@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AssistantWidget } from "@/components/AssistantWidget";
 import { Toaster } from "@/components/ui/sonner";
+import { ShareSheet } from "@/components/ShareSheet";
 
 function NotFoundComponent() {
   return (
@@ -125,6 +126,7 @@ function RootComponent() {
       <Outlet />
       <AssistantWidget />
       <Toaster position="top-center" />
+      <ShareSheet />
     </QueryClientProvider>
   );
 }
