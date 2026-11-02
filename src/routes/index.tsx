@@ -156,28 +156,6 @@ function Index() {
         ))}
       </div>
 
-      {recent.length > 0 && !q.trim() && !cat && (
-        <section className="mb-8">
-          <h2 className="mb-2 text-sm font-semibold text-muted-foreground">آخر ما فتحت</h2>
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {recent.map((c) => (
-              <button
-                key={c.id}
-                onPointerDown={() => prefetch(c.id)}
-                onClick={() => setOpenId(c.id)}
-                className="flex w-56 shrink-0 items-center gap-2 rounded-xl border border-border bg-card p-2 text-right hover:border-primary"
-              >
-                {c.cover_url ? (
-                  <img src={c.cover_url} alt="" className="h-12 w-9 rounded object-cover" />
-                ) : (
-                  <FileText className="h-8 w-8 text-muted-foreground" />
-                )}
-                <span className="line-clamp-2 text-sm font-medium">{c.title}</span>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
 
       {results.length === 0 ? (
         <div className="py-20 text-center text-muted-foreground">
