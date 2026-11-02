@@ -18,9 +18,11 @@ export function CatalogViewer({ id, onClose }: { id: string | null; onClose: () 
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
+    document.body.dataset.viewer = "open";
     return () => {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
+      delete document.body.dataset.viewer;
     };
   }, [id]);
 
@@ -41,7 +43,7 @@ export function CatalogViewer({ id, onClose }: { id: string | null; onClose: () 
         className="flex h-full max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-glow"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2 border-b border-border p-3">
+        <div className="flex flex-wrap items-center gap-2 border-b border-border p-2 sm:p-3">
           {c?.download_url ? (
             <a href={c.download_url} className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 font-semibold text-primary-foreground">
               <Download className="h-4 w-4" /> تحميل
@@ -59,7 +61,8 @@ export function CatalogViewer({ id, onClose }: { id: string | null; onClose: () 
               <ExternalLink className="h-4 w-4" />
             </a>
           )}
-          <p className="min-w-0 flex-1 truncate text-sm font-semibold">{c?.title}</p>
+          <p className="order-last w-full truncate text-sm font-semibold sm:order-none sm:w-auto sm:min-w-0 sm:flex-1">{c?.title}</p>
+          <span className="flex-1 sm:hidden" />
           <button onClick={onClose} aria-label="إغلاق" className="rounded-xl p-2 hover:bg-muted">
             <X className="h-5 w-5" />
           </button>
