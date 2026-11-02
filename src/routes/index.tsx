@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { FileText, Search } from "lucide-react";
+import { FileText, Search, Share2 } from "lucide-react";
+import { toast } from "sonner";
 import { listCatalogs, searchCatalogs } from "@/lib/catalog.functions";
 
 export const catalogsQuery = queryOptions({ queryKey: ["catalogs"], queryFn: () => listCatalogs() });
@@ -22,6 +23,22 @@ export const Route = createFileRoute("/")({
 
 const norm = (s: string) => s.toLowerCase().replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي");
 
+function pairUp<T extends { id: string; title: string; language: string }>(list: T[]): T[] {
+  const out: T[] = [];
+  const used = new Set<string>();
+  for (const c of list) {
+    if (used.has(c.id)) continue;
+    used.add(c.id);
+    out.push(c);
+    const twin = list.find((x) => !used.has(x.id) && x.title === c.title && x.language !== c.language);
+    if (twin) {
+      used.add(twin.id);
+      out.push(twin);
+    }
+  }
+  return out;
+}
+
 function Index() {
   const { data } = useSuspenseQuery(catalogsQuery);
   const search = useServerFn(searchCatalogs);
@@ -38,7 +55,7 @@ function Index() {
   const results = useMemo(() => {
     let list = data.catalogs;
     if (cat) list = list.filter((c) => c.category_id === cat);
-    if (!q.trim()) return list;
+    if (!q.trim()) return pairUp(list);
     const words = norm(q).split(/\s+/).filter(Boolean);
     const direct = list.filter((c) => {
       const hay = norm(`${c.title} ${c.keywords} ${c.description}`);
@@ -46,7 +63,7 @@ function Index() {
     });
     const ids = new Set(direct.map((c) => c.id));
     const extra = fuzzy.map((id) => list.find((c) => c.id === id)).filter((c) => c && !ids.has(c.id));
-    return [...direct, ...(extra as typeof list)];
+    return pairUp([...direct, ...(extra as typeof list)]);
   }, [data.catalogs, q, cat, fuzzy]);
 
   return (
@@ -86,35 +103,55 @@ function Index() {
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {results.map((c) => (
-            <Link
+            <div
               key={c.id}
-              to="/catalog/$id"
-              params={{ id: c.id }}
-              className="group overflow-hidden rounded-2xl border border-border bg-card transition hover:-translate-y-1 hover:border-primary hover:shadow-glow"
+              className="group relative overflow-hidden rounded-2xl border border-border bg-card transition hover:-translate-y-1 hover:border-primary hover:shadow-glow"
             >
-              <div className="aspect-[3/4] bg-muted">
-                {c.cover_url ? (
-                  <img src={c.cover_url} alt={c.title} loading="lazy" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full items-center justify-center">
-                    <FileText className="h-12 w-12 text-muted-foreground" />
-                  </div>
-                )}
-              </div>
-              <div className="p-3">
-                <h2 className="line-clamp-2 font-semibold group-hover:text-primary">{c.title}</h2>
-                {c.category_id && (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {data.categories.find((x) => x.id === c.category_id)?.name}
-                  </p>
-                )}
-              </div>
-            </Link>
+              <Link to="/catalog/$id" params={{ id: c.id }} className="block">
+                <div className="relative aspect-[3/4] bg-muted">
+                  {c.cover_url ? (
+                    <img src={c.cover_url} alt={c.title} loading="lazy" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full items-center justify-center">
+                      <FileText className="h-12 w-12 text-muted-foreground" />
+                    </div>
+                  )}
+                  <span className="absolute right-2 top-2 rounded-full bg-primary px-2.5 py-0.5 text-xs font-bold text-primary-foreground">
+                    {c.language === "en" ? "English" : "عربي"}
+                  </span>
+                </div>
+                <div className="p-3 pl-12">
+                  <h2 className="line-clamp-2 font-semibold group-hover:text-primary">{c.title}</h2>
+                  {c.category_id && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {data.categories.find((x) => x.id === c.category_id)?.name}
+                    </p>
+                  )}
+                </div>
+              </Link>
+              <button
+                onClick={() => shareCatalog(c.id, c.title)}
+                aria-label={`مشاركة ${c.title}`}
+                className="absolute bottom-3 left-3 rounded-full border border-border bg-background p-2 text-muted-foreground hover:border-primary hover:text-primary"
+              >
+                <Share2 className="h-4 w-4" />
+              </button>
+            </div>
           ))}
         </div>
       )}
     </main>
   );
+}
+
+async function shareCatalog(id: string, title: string) {
+  const url = `${window.location.origin}/catalog/${id}`;
+  if (navigator.share) {
+    await navigator.share({ title, url }).catch(() => {});
+  } else {
+    await navigator.clipboard.writeText(url);
+    toast.success("تم نسخ الرابط");
+  }
 }
 
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {

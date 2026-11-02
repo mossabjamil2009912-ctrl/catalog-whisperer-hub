@@ -41,7 +41,12 @@ function CatalogPage() {
         <ArrowRight className="h-4 w-4" /> كل الكتالوجات
       </Link>
       <h1 className="text-2xl font-bold">{c.title}</h1>
-      {c.category && <p className="mt-1 text-sm text-primary">{c.category}</p>}
+      <p className="mt-1 flex items-center gap-2 text-sm text-primary">
+        <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-bold text-primary-foreground">
+          {c.language === "en" ? "English" : "عربي"}
+        </span>
+        {c.category}
+      </p>
       {c.description && <p className="mt-2 text-muted-foreground">{c.description}</p>}
       <div className="my-5 flex flex-wrap gap-2">
         {c.file_url && (
