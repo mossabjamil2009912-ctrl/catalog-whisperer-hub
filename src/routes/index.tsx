@@ -23,18 +23,18 @@ export const Route = createFileRoute("/")({
 
 const norm = (s: string) => s.toLowerCase().replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي");
 
-function pairUp<T extends { id: string; title: string; language: string }>(list: T[]): T[] {
+function pairUp<T extends { id: string; title: string; language: string }>(list: T[], keepOrder = false): T[] {
+  const sorted = keepOrder ? list : [...list].sort((a, b) => a.title.localeCompare(b.title, "ar"));
   const out: T[] = [];
   const used = new Set<string>();
-  for (const c of list) {
+  for (const c of sorted) {
     if (used.has(c.id)) continue;
     used.add(c.id);
-    out.push(c);
-    const twin = list.find((x) => !used.has(x.id) && x.title === c.title && x.language !== c.language);
+    const twin = sorted.find((x) => !used.has(x.id) && x.title === c.title && x.language !== c.language);
     if (twin) {
       used.add(twin.id);
-      out.push(twin);
-    }
+      out.push(...(c.language === "en" ? [c, twin] : [twin, c]));
+    } else out.push(c);
   }
   return out;
 }
@@ -116,7 +116,7 @@ function Index() {
                       <FileText className="h-12 w-12 text-muted-foreground" />
                     </div>
                   )}
-                  <span className="absolute right-2 top-2 rounded-full bg-primary px-2.5 py-0.5 text-xs font-bold text-primary-foreground">
+                  <span className={`absolute right-2 top-2 rounded-full px-2.5 py-0.5 text-xs font-bold ${c.language === "en" ? "bg-muted-foreground text-background" : "bg-destructive text-destructive-foreground"}`}>
                     {c.language === "en" ? "English" : "عربي"}
                   </span>
                 </div>
