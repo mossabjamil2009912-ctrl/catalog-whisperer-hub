@@ -1,10 +1,18 @@
+import { shareLink } from "@/components/ShareSheet";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { shareLink } from "@/components/ShareSheet";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { shareLink } from "@/components/ShareSheet";
 import { useServerFn } from "@tanstack/react-start";
+import { shareLink } from "@/components/ShareSheet";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { shareLink } from "@/components/ShareSheet";
 import { FileText, Search, Share2 } from "lucide-react";
+import { shareLink } from "@/components/ShareSheet";
 import { toast } from "sonner";
+import { shareLink } from "@/components/ShareSheet";
 import { CatalogViewer } from "@/components/CatalogViewer";
+import { shareLink } from "@/components/ShareSheet";
 import { listCatalogs, searchCatalogs } from "@/lib/catalog.functions";
 
 export const catalogsQuery = queryOptions({ queryKey: ["catalogs"], queryFn: () => listCatalogs() });
@@ -149,12 +157,7 @@ function Index() {
 
 async function shareCatalog(id: string, title: string) {
   const url = `${window.location.origin}/catalog/${id}`;
-  if (navigator.share) {
-    await navigator.share({ title, url }).catch(() => {});
-  } else {
-    await navigator.clipboard.writeText(url);
-    toast.success("تم نسخ الرابط");
-  }
+  await shareLink(title, url);
 }
 
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {

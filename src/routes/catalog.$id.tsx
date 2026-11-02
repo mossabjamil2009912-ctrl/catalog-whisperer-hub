@@ -1,6 +1,10 @@
+import { shareLink } from "@/components/ShareSheet";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { shareLink } from "@/components/ShareSheet";
 import { ArrowRight, Download, ExternalLink, Share2 } from "lucide-react";
+import { shareLink } from "@/components/ShareSheet";
 import { toast } from "sonner";
+import { shareLink } from "@/components/ShareSheet";
 import { getCatalog } from "@/lib/catalog.functions";
 
 export const Route = createFileRoute("/catalog/$id")({
@@ -29,11 +33,7 @@ function CatalogPage() {
   const c = Route.useLoaderData();
   const share = async () => {
     const url = window.location.href;
-    if (navigator.share) await navigator.share({ title: c.title, url }).catch(() => {});
-    else {
-      await navigator.clipboard.writeText(url);
-      toast.success("تم نسخ الرابط");
-    }
+    await shareLink(c.title, url);
   };
   return (
     <main className="mx-auto max-w-5xl px-4 pb-28 pt-6">

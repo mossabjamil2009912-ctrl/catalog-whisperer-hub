@@ -1,8 +1,14 @@
+import { shareLink } from "@/components/ShareSheet";
 import { useEffect, useState } from "react";
+import { shareLink } from "@/components/ShareSheet";
 import { useServerFn } from "@tanstack/react-start";
+import { shareLink } from "@/components/ShareSheet";
 import { Download, ExternalLink, Loader2, Share2, X } from "lucide-react";
+import { shareLink } from "@/components/ShareSheet";
 import { toast } from "sonner";
+import { shareLink } from "@/components/ShareSheet";
 import { getCatalog } from "@/lib/catalog.functions";
+import { shareLink } from "@/components/ShareSheet";
 import { PdfPages } from "@/components/PdfPages";
 
 type Cat = Awaited<ReturnType<typeof getCatalog>>;
@@ -30,11 +36,7 @@ export function CatalogViewer({ id, onClose }: { id: string | null; onClose: () 
 
   const share = async () => {
     const url = `${window.location.origin}/catalog/${id}`;
-    if (navigator.share) await navigator.share({ title: c?.title ?? "كتالوج", url }).catch(() => {});
-    else {
-      await navigator.clipboard.writeText(url);
-      toast.success("تم نسخ الرابط");
-    }
+    await shareLink(c?.title ?? "كتالوج", url);
   };
 
   return (
