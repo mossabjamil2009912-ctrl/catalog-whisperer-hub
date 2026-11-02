@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 // Renders every PDF page as a canvas so the catalog shows directly (no phone "Open" button).
+// Pinch / double-tap zoom via react-zoom-pan-pinch; normal scrolling when not zoomed.
 export function PdfPages({ url }: { url: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [zoomed, setZoomed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -21,7 +24,8 @@ export function PdfPages({ url }: { url: string }) {
         pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
         const pdf = await pdfjs.getDocument({ url }).promise;
         const width = box.clientWidth || 800;
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        // Higher resolution so text stays sharp when zoomed in.
+        const dpr = Math.min((window.devicePixelRatio || 1) * 2, 4);
         for (let i = 1; i <= pdf.numPages; i++) {
           if (cancelled) return;
           const page = await pdf.getPage(i);
@@ -54,7 +58,18 @@ export function PdfPages({ url }: { url: string }) {
         </div>
       )}
       {error && <p className="p-6 text-center text-muted-foreground">تعذر عرض الكتالوج — استخدم زر التحميل.</p>}
-      <div ref={ref} />
+      <TransformWrapper
+        minScale={1}
+        maxScale={5}
+        panning={{ disabled: !zoomed }}
+        doubleClick={{ mode: zoomed ? "reset" : "zoomIn", step: 1 }}
+        wheel={{ activationKeys: ["Control"] }}
+        onTransform={(_, s) => setZoomed(s.scale > 1.01)}
+      >
+        <TransformComponent wrapperStyle={{ width: "100%", overflow: "visible" }} contentStyle={{ width: "100%" }}>
+          <div ref={ref} className="w-full" />
+        </TransformComponent>
+      </TransformWrapper>
     </div>
   );
 }
