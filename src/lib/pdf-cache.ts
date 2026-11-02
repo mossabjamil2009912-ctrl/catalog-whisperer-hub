@@ -43,7 +43,7 @@ export function loadPdfBytes(id: string, url: string): Promise<ArrayBuffer> {
 
 export function prefetchCatalog(id: string, fetcher: (a: { data: { id: string } }) => Promise<Cat>) {
   loadCatalogInfo(id, fetcher)
-    .then((c) => c?.file_url && loadPdfBytes(id, c.file_url))
+    .then((c) => (c?.file_url ? loadPdfBytes(id, c.file_url) : undefined))
     .catch(() => {});
 }
 
