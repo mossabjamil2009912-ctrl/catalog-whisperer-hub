@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Send, X, Loader2 } from "lucide-react";
 import { askAssistant } from "@/lib/catalog.functions";
-import logo from "@/assets/actes-logo-white-v2.png.asset.json";
+const logo = { url: "/actes-logo.png" };
 
 type Msg = { role: "user" | "assistant"; content: string; sources?: { id: string; title: string }[] };
 

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { CatalogViewer } from "@/components/CatalogViewer";
 import { getCatalog, listCatalogs, searchCatalogs } from "@/lib/catalog.functions";
 import { downloadAll, getRecent, prefetchCatalog } from "@/lib/pdf-cache";
-import logo from "@/assets/actes-logo-white-v2.png.asset.json";
+const logo = { url: "/actes-logo.png" };
 
 export const catalogsQuery = queryOptions({
   queryKey: ["catalogs"],
