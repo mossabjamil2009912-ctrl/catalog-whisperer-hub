@@ -172,7 +172,7 @@ function Index() {
               <button type="button" onPointerEnter={() => prefetch(c.id)} onPointerDown={() => prefetch(c.id)} onClick={() => setOpenId(c.id)} className="block w-full text-right">
                 <div className="relative aspect-[3/4] bg-muted">
                   {c.cover_url ? (
-                    <img src={c.cover_url} alt={c.title} loading="lazy" className="h-full w-full object-cover" />
+                    <img src={`/catalogs/${c.id}.jpg`} onError={(e) => { if (c.cover_url) e.currentTarget.src = c.cover_url; }} alt={c.title} loading="lazy" className="h-full w-full object-cover" />
                   ) : (
                     <div className="flex h-full items-center justify-center">
                       <FileText className="h-12 w-12 text-muted-foreground" />
