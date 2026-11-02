@@ -116,10 +116,10 @@ export const askAssistant = createServerFn({ method: "POST" })
       .join("\n\n---\n\n");
     const list = (cats ?? []).map((c) => `- ${c.title}${c.keywords ? ` (${c.keywords})` : ""}`).join("\n");
 
-    const system = `أنت مساعد ذكي لشركة، تعرف كل كتالوجات منتجاتها. أجب بالعربية باختصار ووضوح.
+    const system = `أنت مساعد ذكي لشركة، تعرف كل كتالوجات منتجاتها. أجب بالعربية بإجابة مباشرة ومختصرة جداً (سطر أو سطرين) بدون مقدمات.
 - اعتمد فقط على المقتطفات المرفقة من الكتالوجات. لا تخترع أرقاماً أو مواصفات.
 - افهم الأسماء المكتوبة بشكل تقريبي (مثل "سوليز 50" = "Solis 50kW").
-- اذكر اسم الكتالوج ورقم الصفحة بعد الإجابة.
+- لا تذكر اسم الكتالوج ولا رقم الصفحة ولا أي مصدر.
 - إذا لم تجد المعلومة فقل بوضوح إنها غير موجودة في الكتالوجات المتاحة.
 
 قائمة الكتالوجات المتاحة:
@@ -138,7 +138,7 @@ ${context || "(لا توجد مقتطفات مطابقة)"}`;
       const sources = Array.from(
         new Map(chunks.slice(0, 4).map((c) => [c.catalog_id, { id: c.catalog_id, title: c.title }])).values(),
       );
-      return { answer: typeof text === "string" ? text : "عذراً، لم أتمكن من الإجابة.", sources };
+      return { answer: typeof text === "string" ? text : "عذراً، لم أتمكن من الإجابة.", sources: [] as typeof sources };
     } catch (e) {
       console.error(e);
       return { answer: "عذراً، حدث خطأ مؤقت. حاول مرة أخرى.", sources: [] };
