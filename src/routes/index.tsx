@@ -46,6 +46,7 @@ function Index() {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string | null>(null);
   const [fuzzy, setFuzzy] = useState<string[]>([]);
+  const [openId, setOpenId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!q.trim()) return setFuzzy([]);
@@ -141,6 +142,7 @@ function Index() {
           ))}
         </div>
       )}
+      <CatalogViewer id={openId} onClose={() => setOpenId(null)} />
     </main>
   );
 }
