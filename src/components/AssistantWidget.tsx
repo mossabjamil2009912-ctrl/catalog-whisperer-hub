@@ -7,7 +7,6 @@ import logo from "@/assets/actes-logo-white.png.asset.json";
 
 type Msg = { role: "user" | "assistant"; content: string; sources?: { id: string; title: string }[] };
 
-const SUGGESTIONS = ["ما سعة بطارية RV12100CH؟", "ما الكتالوجات المتوفرة؟"];
 
 export function AssistantWidget() {
   const ask = useServerFn(askAssistant);
@@ -66,15 +65,6 @@ export function AssistantWidget() {
             {msgs.length === 0 && (
               <div className="space-y-3 text-sm text-muted-foreground">
                 <p>مرحباً! اسألني عن أي منتج أو مواصفة في كتالوجاتنا.</p>
-                {SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => send(s)}
-                    className="block w-full rounded-xl border border-border bg-secondary px-3 py-2 text-right text-foreground hover:border-primary"
-                  >
-                    {s}
-                  </button>
-                ))}
               </div>
             )}
             {msgs.map((m, i) => (
