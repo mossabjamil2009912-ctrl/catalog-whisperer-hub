@@ -85,7 +85,8 @@ export function PdfPages({ id, url, cover }: { id: string; url: string; cover?: 
       cancelled = true;
       observer?.disconnect();
     };
-  }, [id, url]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   return (
     <div className="h-full overflow-y-auto overscroll-contain p-2">
