@@ -64,7 +64,7 @@ export function PdfPages({ url }: { url: string }) {
         panning={{ disabled: !zoomed }}
         doubleClick={{ mode: zoomed ? "reset" : "zoomIn", step: 1 }}
         wheel={{ activationKeys: ["Control"] }}
-        onTransformed={(_, s) => setZoomed(s.scale > 1.01)}
+        onTransform={(_, s) => setZoomed(s.scale > 1.01)}
       >
         <TransformComponent wrapperStyle={{ width: "100%", overflow: "visible" }} contentStyle={{ width: "100%" }}>
           <div ref={ref} className="w-full" />
