@@ -27,7 +27,7 @@ export function CatalogViewer({ id, onClose }: { id: string | null; onClose: () 
 
   const share = async () => {
     const url = `${window.location.origin}/catalog/${id}`;
-    if (navigator.share) await navigator.share({ title: c?.title, url }).catch(() => {});
+    if (navigator.share) await navigator.share({ title: c?.title ?? "كتالوج", url }).catch(() => {});
     else {
       await navigator.clipboard.writeText(url);
       toast.success("تم نسخ الرابط");
