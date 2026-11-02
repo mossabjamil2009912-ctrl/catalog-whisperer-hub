@@ -85,7 +85,7 @@ function Dashboard({ code }: { code: string }) {
 
   async function upload(e: React.FormEvent) {
     e.preventDefault();
-    if (!file || !title.trim()) return toast.error("اختر ملف PDF واكتب الاسم");
+    if (!file || !title.trim()) { toast.error("اختر ملف PDF واكتب الاسم"); return; }
     try {
       setStatus("جارٍ قراءة الكتالوج...");
       const { extractPdf } = await import("@/lib/pdf-extract");
