@@ -25,7 +25,9 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const norm = (s: string) => s.toLowerCase().replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي");
+const digits = (s: string) =>
+  s.replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660)).replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
+const norm = (s: string) => digits(s).toLowerCase().replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي");
 
 function pairUp<T extends { id: string; title: string; language: string }>(list: T[], keepOrder = false): T[] {
   const sorted = keepOrder ? list : [...list].sort((a, b) => a.title.localeCompare(b.title, "ar"));
@@ -72,7 +74,7 @@ function Index() {
 
   useEffect(() => {
     if (!q.trim()) { setFuzzy([]); return; }
-    const t = setTimeout(() => search({ data: { q } }).then(setFuzzy).catch(() => {}), 250);
+    const t = setTimeout(() => search({ data: { q: digits(q) } }).then(setFuzzy).catch(() => {}), 250);
     return () => clearTimeout(t);
   }, [q, search]);
 
