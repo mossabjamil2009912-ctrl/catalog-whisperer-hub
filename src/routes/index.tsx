@@ -6,7 +6,8 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { FileText, Search, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { CatalogViewer } from "@/components/CatalogViewer";
-import { listCatalogs, searchCatalogs } from "@/lib/catalog.functions";
+import { getCatalog, listCatalogs, searchCatalogs } from "@/lib/catalog.functions";
+import { getRecent, prefetchCatalog } from "@/lib/pdf-cache";
 
 export const catalogsQuery = queryOptions({ queryKey: ["catalogs"], queryFn: () => listCatalogs() });
 
@@ -56,9 +57,20 @@ function Index() {
   const [cat, setCat] = useState<string | null>(null);
   const [fuzzy, setFuzzy] = useState<string[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
+  const fetchCatalog = useServerFn(getCatalog);
+  const prefetch = (id: string) => prefetchCatalog(id, fetchCatalog);
+  const [recentIds, setRecentIds] = useState<string[]>([]);
+  useEffect(() => {
+    const sync = () => setRecentIds(getRecent());
+    sync();
+    window.addEventListener("recent-changed", sync);
+    return () => window.removeEventListener("recent-changed", sync);
+  }, []);
+  const recent = recentIds.map((id) => data.catalogs.find((c) => c.id === id)).filter((c): c is (typeof data.catalogs)[number] => !!c);
+  const openCover = data.catalogs.find((c) => c.id === openId)?.cover_url ?? null;
 
   useEffect(() => {
-    if (!q.trim()) return setFuzzy([]);
+    if (!q.trim()) { setFuzzy([]); return; }
     const t = setTimeout(() => search({ data: { q } }).then(setFuzzy).catch(() => {}), 250);
     return () => clearTimeout(t);
   }, [q, search]);
@@ -111,6 +123,29 @@ function Index() {
         ))}
       </div>
 
+      {recent.length > 0 && !q.trim() && !cat && (
+        <section className="mb-8">
+          <h2 className="mb-2 text-sm font-semibold text-muted-foreground">آخر ما فتحت</h2>
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {recent.map((c) => (
+              <button
+                key={c.id}
+                onPointerDown={() => prefetch(c.id)}
+                onClick={() => setOpenId(c.id)}
+                className="flex w-56 shrink-0 items-center gap-2 rounded-xl border border-border bg-card p-2 text-right hover:border-primary"
+              >
+                {c.cover_url ? (
+                  <img src={c.cover_url} alt="" className="h-12 w-9 rounded object-cover" />
+                ) : (
+                  <FileText className="h-8 w-8 text-muted-foreground" />
+                )}
+                <span className="line-clamp-2 text-sm font-medium">{c.title}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       {results.length === 0 ? (
         <div className="py-20 text-center text-muted-foreground">
           {data.catalogs.length === 0 ? "لا توجد كتالوجات بعد." : "لا توجد نتائج — جرّب سؤال المساعد الذكي."}
@@ -122,7 +157,7 @@ function Index() {
               key={c.id}
               className="group relative overflow-hidden rounded-2xl border border-border bg-card transition hover:-translate-y-1 hover:border-primary hover:shadow-glow"
             >
-              <button type="button" onClick={() => setOpenId(c.id)} className="block w-full text-right">
+              <button type="button" onPointerEnter={() => prefetch(c.id)} onPointerDown={() => prefetch(c.id)} onClick={() => setOpenId(c.id)} className="block w-full text-right">
                 <div className="relative aspect-[3/4] bg-muted">
                   {c.cover_url ? (
                     <img src={c.cover_url} alt={c.title} loading="lazy" className="h-full w-full object-cover" />
@@ -136,7 +171,7 @@ function Index() {
                   </span>
                 </div>
                 <div className="p-3 pl-12">
-                  <h2 className="line-clamp-2 font-semibold group-hover:text-primary">{c.title}</h2>
+                  <h2 className="line-clamp-2 text-base font-bold leading-snug group-hover:text-primary">{c.title}</h2>
                   {c.category_id && (
                     <p className="mt-1 text-xs text-muted-foreground">
                       {data.categories.find((x) => x.id === c.category_id)?.name}
@@ -155,7 +190,7 @@ function Index() {
           ))}
         </div>
       )}
-      <CatalogViewer id={openId} onClose={() => setOpenId(null)} />
+      <CatalogViewer id={openId} cover={openCover} onClose={() => setOpenId(null)} />
     </main>
   );
 }
