@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { FileText, Search, Share2 } from "lucide-react";
 import { toast } from "sonner";
+import { CatalogViewer } from "@/components/CatalogViewer";
 import { listCatalogs, searchCatalogs } from "@/lib/catalog.functions";
 
 export const catalogsQuery = queryOptions({ queryKey: ["catalogs"], queryFn: () => listCatalogs() });
@@ -107,7 +108,7 @@ function Index() {
               key={c.id}
               className="group relative overflow-hidden rounded-2xl border border-border bg-card transition hover:-translate-y-1 hover:border-primary hover:shadow-glow"
             >
-              <Link to="/catalog/$id" params={{ id: c.id }} className="block">
+              <button type="button" onClick={() => setOpenId(c.id)} className="block w-full text-right">
                 <div className="relative aspect-[3/4] bg-muted">
                   {c.cover_url ? (
                     <img src={c.cover_url} alt={c.title} loading="lazy" className="h-full w-full object-cover" />
@@ -128,7 +129,7 @@ function Index() {
                     </p>
                   )}
                 </div>
-              </Link>
+              </button>
               <button
                 onClick={() => shareCatalog(c.id, c.title)}
                 aria-label={`مشاركة ${c.title}`}
