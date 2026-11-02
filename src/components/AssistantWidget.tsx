@@ -43,7 +43,7 @@ export function AssistantWidget() {
         <button
           onClick={() => setOpen(true)}
           aria-label="المساعد الذكي"
-          className="assistant-fab fixed bottom-5 left-5 z-50 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-2 border-primary bg-card p-1.5 shadow-glow transition-transform hover:scale-105"
+          className="assistant-fab fixed bottom-5 left-5 z-50 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-[3px] border-[#e85d3a] bg-card p-1.5 shadow-glow ring-2 ring-[#e85d3a]/50 ring-offset-2 ring-offset-background transition-transform hover:scale-105"
         >
           <img src={logo.url} alt="ACTES" className="h-full w-full object-contain" />
         </button>
