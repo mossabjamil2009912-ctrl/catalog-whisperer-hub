@@ -63,7 +63,7 @@ function Index() {
     });
     const ids = new Set(direct.map((c) => c.id));
     const extra = fuzzy.map((id) => list.find((c) => c.id === id)).filter((c) => c && !ids.has(c.id));
-    return pairUp([...direct, ...(extra as typeof list)]);
+    return pairUp([...direct, ...(extra as typeof list)], true);
   }, [data.catalogs, q, cat, fuzzy]);
 
   return (
