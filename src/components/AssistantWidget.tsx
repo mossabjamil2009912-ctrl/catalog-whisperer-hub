@@ -53,7 +53,10 @@ export function AssistantWidget() {
         <div className="fixed inset-x-3 bottom-3 z-50 flex h-[78vh] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-glow sm:inset-x-auto sm:left-5 sm:w-[400px]">
           <div className="flex items-center justify-between bg-primary px-4 py-3 text-primary-foreground">
             <div className="flex items-center gap-2 font-semibold">
-              <Bot className="h-5 w-5" /> المساعد الذكي
+              <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-card p-1">
+                <img src={logo.url} alt="ACTES" className="h-full w-full object-contain" />
+              </span>
+              المساعد الذكي
             </div>
             <button onClick={() => setOpen(false)} aria-label="إغلاق">
               <X className="h-5 w-5" />

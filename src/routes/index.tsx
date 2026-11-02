@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { CatalogViewer } from "@/components/CatalogViewer";
 import { getCatalog, listCatalogs, searchCatalogs } from "@/lib/catalog.functions";
 import { getRecent, prefetchCatalog } from "@/lib/pdf-cache";
+import logo from "@/assets/actes-logo.png.asset.json";
 
 export const catalogsQuery = queryOptions({ queryKey: ["catalogs"], queryFn: () => listCatalogs() });
 
@@ -98,6 +99,7 @@ function Index() {
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 pb-28 pt-10">
       <header className="mb-8 text-center">
+        <img src={logo.url} alt="ACTES" className="mx-auto mb-4 h-14 w-auto object-contain sm:h-16" />
         <h1 className="text-3xl font-bold sm:text-4xl">
           مكتبة <span className="text-primary">الكتالوجات</span>
         </h1>
