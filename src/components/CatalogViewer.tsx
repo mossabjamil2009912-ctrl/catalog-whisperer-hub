@@ -1,14 +1,9 @@
 import { shareLink } from "@/components/ShareSheet";
 import { useEffect, useState } from "react";
-import { shareLink } from "@/components/ShareSheet";
 import { useServerFn } from "@tanstack/react-start";
-import { shareLink } from "@/components/ShareSheet";
 import { Download, ExternalLink, Loader2, Share2, X } from "lucide-react";
-import { shareLink } from "@/components/ShareSheet";
 import { toast } from "sonner";
-import { shareLink } from "@/components/ShareSheet";
 import { getCatalog } from "@/lib/catalog.functions";
-import { shareLink } from "@/components/ShareSheet";
 import { PdfPages } from "@/components/PdfPages";
 
 type Cat = Awaited<ReturnType<typeof getCatalog>>;

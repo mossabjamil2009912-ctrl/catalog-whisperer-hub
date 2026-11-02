@@ -1,10 +1,7 @@
 import { shareLink } from "@/components/ShareSheet";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { shareLink } from "@/components/ShareSheet";
 import { ArrowRight, Download, ExternalLink, Share2 } from "lucide-react";
-import { shareLink } from "@/components/ShareSheet";
 import { toast } from "sonner";
-import { shareLink } from "@/components/ShareSheet";
 import { getCatalog } from "@/lib/catalog.functions";
 
 export const Route = createFileRoute("/catalog/$id")({
