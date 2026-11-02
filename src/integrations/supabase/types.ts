@@ -52,6 +52,7 @@ export type Database = {
           file_path: string
           id: string
           keywords: string
+          language: string
           page_count: number
           title: string
         }
@@ -63,6 +64,7 @@ export type Database = {
           file_path: string
           id?: string
           keywords?: string
+          language?: string
           page_count?: number
           title: string
         }
@@ -74,6 +76,7 @@ export type Database = {
           file_path?: string
           id?: string
           keywords?: string
+          language?: string
           page_count?: number
           title?: string
         }

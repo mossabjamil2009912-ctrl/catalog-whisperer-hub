@@ -17,6 +17,7 @@ export type CatalogItem = {
   description: string;
   keywords: string;
   category_id: string | null;
+  language: string;
   page_count: number;
   created_at: string;
   cover_url: string | null;
@@ -41,6 +42,7 @@ export const listCatalogs = createServerFn({ method: "GET" }).handler(async () =
     description: r.description,
     keywords: r.keywords,
     category_id: r.category_id,
+    language: r.language,
     page_count: r.page_count,
     created_at: r.created_at,
     cover_url: r.cover_path ? (urlMap.get(r.cover_path) ?? null) : null,
@@ -71,6 +73,7 @@ export const getCatalog = createServerFn({ method: "GET" })
       id: row.id,
       title: row.title,
       description: row.description,
+      language: row.language,
       category: (row.categories as { name: string } | null)?.name ?? null,
       page_count: row.page_count,
       file_url: file?.signedUrl ?? null,
@@ -175,6 +178,7 @@ export const saveCatalog = createServerFn({ method: "POST" })
       description: string;
       keywords: string;
       category_id: string | null;
+      language?: string;
       file_path: string;
       cover_path: string | null;
       page_count: number;
@@ -191,6 +195,7 @@ export const saveCatalog = createServerFn({ method: "POST" })
         description: data.description,
         keywords: data.keywords,
         category_id: data.category_id || null,
+        language: data.language === "en" ? "en" : "ar",
         file_path: data.file_path,
         cover_path: data.cover_path,
         page_count: data.page_count,
