@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Bot, Send, X, Loader2 } from "lucide-react";
 import { askAssistant } from "@/lib/catalog.functions";
+import logo from "@/assets/actes-logo.png.asset.json";
 
 type Msg = { role: "user" | "assistant"; content: string; sources?: { id: string; title: string }[] };
 
@@ -41,10 +42,9 @@ export function AssistantWidget() {
         <button
           onClick={() => setOpen(true)}
           aria-label="المساعد الذكي"
-          className="assistant-fab fixed bottom-5 left-5 z-50 flex items-center gap-2 rounded-full bg-primary px-5 py-4 font-semibold text-primary-foreground shadow-glow transition-transform hover:scale-105"
+          className="assistant-fab fixed bottom-5 left-5 z-50 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-2 border-primary bg-card p-1.5 shadow-glow transition-transform hover:scale-105"
         >
-          <Bot className="h-6 w-6" />
-          <span>اسأل المساعد</span>
+          <img src={logo.url} alt="ACTES" className="h-full w-full object-contain" />
         </button>
       )}
       {open && (
