@@ -18,11 +18,11 @@ export function CatalogViewer({ id, onClose }: { id: string | null; onClose: () 
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
-    document.body.dataset.viewer = "open";
+    document.body.dataset["viewer"] = "open";
     return () => {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
-      delete document.body.dataset.viewer;
+      delete document.body.dataset["viewer"];
     };
   }, [id]);
 
