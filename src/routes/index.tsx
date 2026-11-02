@@ -43,11 +43,12 @@ function pairUp<T extends { id: string; title: string; language: string }>(list:
 
 function Index() {
   const BRANDS = [
+    { name: "Suntech", terms: ["suntech", "سانتك"] },
+    { name: "Li Power", terms: ["li power", "لي باور", "bz4024"] },
     { name: "Deye", terms: ["deye", "داي"] },
     { name: "Solis", terms: ["solis", "سوليس"] },
-    { name: "Pylontech", terms: ["pylontech", "بايلونتك"] },
-    { name: "HiTHIUM", terms: ["hithium", "هايثيوم"] },
-    { name: "Suntech", terms: ["suntech", "سانتك"] },
+    { name: "Pylontech", terms: ["pylontech", "بايلونتك", "powercube"] },
+    { name: "HiTHIUM", terms: ["hithium", "هايثيوم", "heroee"] },
   ];
   const { data } = useSuspenseQuery(catalogsQuery);
   const search = useServerFn(searchCatalogs);
