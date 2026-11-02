@@ -31,7 +31,7 @@ export function PdfPages({ url }: { url: string }) {
           standardFontDataUrl: `${cdn}/standard_fonts/`,
           wasmUrl: `${cdn}/wasm/`,
           useSystemFonts: false,
-          disableFontFace: false,
+          disableFontFace: true,
         }).promise;
         const width = box.clientWidth || 800;
         // Higher resolution so text stays sharp when zoomed in.
