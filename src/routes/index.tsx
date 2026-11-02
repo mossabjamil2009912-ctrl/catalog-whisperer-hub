@@ -128,7 +128,7 @@ function Index() {
         <h1 className="text-3xl font-bold sm:text-4xl">
           مكتبة <span className="text-primary">الكتالوجات</span>
         </h1>
-        <p className="mt-2 text-muted-foreground">ابحث باسم المنتج أو أي معلومة بداخله</p>
+        <p className="mt-2 text-muted-foreground">ابحث عن كتالوج المنتج</p>
         {saved && (
           <p className="mt-2 text-xs text-muted-foreground">
             {saved.done < saved.total
