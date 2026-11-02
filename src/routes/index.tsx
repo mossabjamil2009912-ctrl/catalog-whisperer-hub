@@ -77,9 +77,9 @@ function Index() {
       const hay = norm(`${c.title} ${c.keywords} ${c.description}`);
       return words.every((w) => hay.includes(w));
     });
-    const ids = new Set(direct.map((c) => c.id));
-    const extra = fuzzy.map((id) => list.find((c) => c.id === id)).filter((c) => c && !ids.has(c.id));
-    return pairUp([...direct, ...(extra as typeof list)], true);
+    if (direct.length) return pairUp(direct, true);
+    const extra = fuzzy.map((id) => list.find((c) => c.id === id)).filter(Boolean);
+    return pairUp(extra as typeof list, true);
   }, [data.catalogs, q, cat, fuzzy]);
 
   return (
