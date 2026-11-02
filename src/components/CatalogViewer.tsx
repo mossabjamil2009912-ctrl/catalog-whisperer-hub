@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Download, ExternalLink, Loader2, Share2, X } from "lucide-react";
 import { toast } from "sonner";
 import { getCatalog } from "@/lib/catalog.functions";
+import { PdfPages } from "@/components/PdfPages";
 
 type Cat = Awaited<ReturnType<typeof getCatalog>>;
 
@@ -63,9 +64,9 @@ export function CatalogViewer({ id, onClose }: { id: string | null; onClose: () 
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="flex-1 bg-muted">
+        <div className="min-h-0 flex-1 bg-muted">
           {c?.file_url ? (
-            <iframe src={c.file_url} title={c.title} className="h-full w-full" />
+            <PdfPages url={c.file_url} />
           ) : (
             <div className="flex h-full items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
