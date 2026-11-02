@@ -6,7 +6,7 @@ import { askAssistant } from "@/lib/catalog.functions";
 
 type Msg = { role: "user" | "assistant"; content: string; sources?: { id: string; title: string }[] };
 
-const SUGGESTIONS = ["كم عدد MPPT في سوليس 50؟", "ما الكتالوجات المتوفرة؟"];
+const SUGGESTIONS = ["ما سعة بطارية RV12100CH؟", "ما الكتالوجات المتوفرة؟"];
 
 export function AssistantWidget() {
   const ask = useServerFn(askAssistant);
