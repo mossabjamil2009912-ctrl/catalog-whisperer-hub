@@ -22,7 +22,17 @@ export function PdfPages({ url }: { url: string }) {
         const pdfjs = await import("pdfjs-dist");
         const workerUrl = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
         pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
-        const pdf = await pdfjs.getDocument({ url }).promise;
+        // Font + CMap data so embedded/custom fonts render with correct letter spacing.
+        const cdn = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}`;
+        const pdf = await pdfjs.getDocument({
+          url,
+          cMapUrl: `${cdn}/cmaps/`,
+          cMapPacked: true,
+          standardFontDataUrl: `${cdn}/standard_fonts/`,
+          wasmUrl: `${cdn}/wasm/`,
+          useSystemFonts: false,
+          disableFontFace: false,
+        }).promise;
         const width = box.clientWidth || 800;
         // Higher resolution so text stays sharp when zoomed in.
         const dpr = Math.min((window.devicePixelRatio || 1) * 2, 4);
