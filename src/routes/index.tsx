@@ -42,6 +42,13 @@ function pairUp<T extends { id: string; title: string; language: string }>(list:
 }
 
 function Index() {
+  const BRANDS = [
+    { name: "Deye", terms: ["deye", "داي"] },
+    { name: "Solis", terms: ["solis", "سوليس"] },
+    { name: "Pylontech", terms: ["pylontech", "بايلونتك"] },
+    { name: "HiTHIUM", terms: ["hithium", "هايثيوم"] },
+    { name: "Suntech", terms: ["suntech", "سانتك"] },
+  ];
   const { data } = useSuspenseQuery(catalogsQuery);
   const search = useServerFn(searchCatalogs);
   const [q, setQ] = useState("");
@@ -57,7 +64,13 @@ function Index() {
 
   const results = useMemo(() => {
     let list = data.catalogs;
-    if (cat) list = list.filter((c) => c.category_id === cat);
+    const brand = BRANDS.find((b) => b.name === cat);
+    if (brand) {
+      list = list.filter((c) => {
+        const hay = `${c.title} ${c.keywords}`.toLowerCase();
+        return brand.terms.some((t) => hay.includes(t));
+      });
+    }
     if (!q.trim()) return pairUp(list);
     const words = norm(q).split(/\s+/).filter(Boolean);
     const direct = list.filter((c) => {
@@ -88,16 +101,14 @@ function Index() {
         />
       </div>
 
-      {data.categories.length > 0 && (
-        <div className="mb-8 flex gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:justify-center">
-          <Chip active={!cat} onClick={() => setCat(null)}>الكل</Chip>
-          {data.categories.map((c) => (
-            <Chip key={c.id} active={cat === c.id} onClick={() => setCat(c.id)}>
-              {c.name}
-            </Chip>
-          ))}
-        </div>
-      )}
+      <div className="mb-8 flex gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:justify-center">
+        <Chip active={!cat} onClick={() => setCat(null)}>الكل</Chip>
+        {BRANDS.map((b) => (
+          <Chip key={b.name} active={cat === b.name} onClick={() => setCat(b.name)}>
+            {b.name}
+          </Chip>
+        ))}
+      </div>
 
       {results.length === 0 ? (
         <div className="py-20 text-center text-muted-foreground">
