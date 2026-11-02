@@ -4,7 +4,7 @@ const BUCKET = "catalogs";
 
 // Falls back to the public client on external hosts that lack the service key (reads only).
 async function admin() {
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (!process.env["SUPABASE_SERVICE_ROLE_KEY"]) {
     const { supabase } = await import("@/integrations/supabase/client");
     return supabase as unknown as Awaited<
       typeof import("@/integrations/supabase/client.server")
