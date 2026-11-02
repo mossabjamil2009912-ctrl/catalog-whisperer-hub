@@ -7,10 +7,25 @@ import { FileText, Search, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { CatalogViewer } from "@/components/CatalogViewer";
 import { getCatalog, listCatalogs, searchCatalogs } from "@/lib/catalog.functions";
-import { getRecent, prefetchCatalog } from "@/lib/pdf-cache";
+import { downloadAll, getRecent, prefetchCatalog } from "@/lib/pdf-cache";
 import logo from "@/assets/actes-logo-white.png.asset.json";
 
-export const catalogsQuery = queryOptions({ queryKey: ["catalogs"], queryFn: () => listCatalogs() });
+export const catalogsQuery = queryOptions({
+  queryKey: ["catalogs"],
+  queryFn: async () => {
+    try {
+      const d = await listCatalogs();
+      if (typeof window !== "undefined") {
+        try { localStorage.setItem("catalogs-list", JSON.stringify(d)); } catch {}
+      }
+      return d;
+    } catch (e) {
+      const saved = typeof window !== "undefined" ? localStorage.getItem("catalogs-list") : null;
+      if (saved) return JSON.parse(saved) as Awaited<ReturnType<typeof listCatalogs>>;
+      throw e;
+    }
+  },
+});
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -69,6 +84,14 @@ function Index() {
     window.addEventListener("recent-changed", sync);
     return () => window.removeEventListener("recent-changed", sync);
   }, []);
+  const [saved, setSaved] = useState<{ done: number; total: number } | null>(null);
+  useEffect(() => {
+    try { localStorage.setItem("catalogs-list", JSON.stringify(data)); } catch {}
+    const t = setTimeout(() => {
+      downloadAll(data.catalogs.map((c) => c.id), fetchCatalog, (done, total) => setSaved({ done, total }));
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [data, fetchCatalog]);
   const recent = recentIds.map((id) => data.catalogs.find((c) => c.id === id)).filter((c): c is (typeof data.catalogs)[number] => !!c);
   const openCover = data.catalogs.find((c) => c.id === openId)?.cover_url ?? null;
 
@@ -106,6 +129,13 @@ function Index() {
           مكتبة <span className="text-primary">الكتالوجات</span>
         </h1>
         <p className="mt-2 text-muted-foreground">ابحث باسم المنتج أو أي معلومة بداخله</p>
+        {saved && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            {saved.done < saved.total
+              ? `جاري حفظ الكتالوجات للعمل بدون إنترنت… ${saved.done}/${saved.total}`
+              : `✓ جميع الكتالوجات (${saved.total}) محفوظة وتعمل بدون إنترنت`}
+          </p>
+        )}
       </header>
 
       <div className="relative mx-auto mb-5 max-w-2xl">

@@ -35,5 +35,11 @@ export function registerAppSw() {
     unregisterAppSw().catch(() => {});
     return;
   }
-  navigator.serviceWorker.register(SW_URL, { scope: "/" }).catch(() => {});
+  navigator.serviceWorker
+    .register(SW_URL, { scope: "/" })
+    .then(() => navigator.serviceWorker.ready)
+    // Save the home page right away so the app opens without internet from the next launch.
+    .then(() => caches.open("pages"))
+    .then((c) => c.add(new Request("/", { cache: "reload" })))
+    .catch(() => {});
 }

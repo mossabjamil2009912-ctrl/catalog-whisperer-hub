@@ -28,6 +28,8 @@ export default defineConfig({
           globPatterns: ["**/*.{js,css,woff2,png,svg,ico}"],
           maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
           cleanupOutdatedCaches: true,
+          // Build output lives under client/ but is served from the site root.
+          modifyURLPrefix: { "client/": "" },
           runtimeCaching: [
             {
               urlPattern: ({ request, url }) =>
@@ -41,6 +43,23 @@ export default defineConfig({
                 request.method === "GET" && url.pathname.startsWith("/_serverFn"),
               handler: "NetworkFirst",
               options: { cacheName: "api", networkTimeoutSeconds: 4 },
+            },
+            {
+              // Catalog cover images: signed links change, so cache by path only.
+              urlPattern: ({ url }) => url.pathname.includes("/storage/v1/object/sign/"),
+              handler: "CacheFirst",
+              options: {
+                cacheName: "covers",
+                expiration: { maxEntries: 300 },
+                plugins: [
+                  {
+                    cacheKeyWillBeUsed: async ({ request }) => {
+                      const u = new URL(request.url);
+                      return u.origin + u.pathname;
+                    },
+                  },
+                ],
+              },
             },
             {
               urlPattern: ({ url }) =>
