@@ -111,3 +111,5 @@
     font-family: var(--font-sans);
   }
 }
+
+body[data-viewer="open"] .assistant-fab { display: none; }

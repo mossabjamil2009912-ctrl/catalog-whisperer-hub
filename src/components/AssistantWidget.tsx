@@ -41,7 +41,7 @@ export function AssistantWidget() {
         <button
           onClick={() => setOpen(true)}
           aria-label="المساعد الذكي"
-          className="fixed bottom-5 left-5 z-50 flex items-center gap-2 rounded-full bg-primary px-5 py-4 font-semibold text-primary-foreground shadow-glow transition-transform hover:scale-105"
+          className="assistant-fab fixed bottom-5 left-5 z-50 flex items-center gap-2 rounded-full bg-primary px-5 py-4 font-semibold text-primary-foreground shadow-glow transition-transform hover:scale-105"
         >
           <Bot className="h-6 w-6" />
           <span>اسأل المساعد</span>
