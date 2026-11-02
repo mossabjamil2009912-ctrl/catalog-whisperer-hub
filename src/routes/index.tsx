@@ -1,3 +1,4 @@
+import { shareLink } from "@/components/ShareSheet";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -149,12 +150,7 @@ function Index() {
 
 async function shareCatalog(id: string, title: string) {
   const url = `${window.location.origin}/catalog/${id}`;
-  if (navigator.share) {
-    await navigator.share({ title, url }).catch(() => {});
-  } else {
-    await navigator.clipboard.writeText(url);
-    toast.success("تم نسخ الرابط");
-  }
+  await shareLink(title, url);
 }
 
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {

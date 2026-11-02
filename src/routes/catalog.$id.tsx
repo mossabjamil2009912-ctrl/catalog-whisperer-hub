@@ -1,3 +1,4 @@
+import { shareLink } from "@/components/ShareSheet";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowRight, Download, ExternalLink, Share2 } from "lucide-react";
 import { toast } from "sonner";
@@ -29,11 +30,7 @@ function CatalogPage() {
   const c = Route.useLoaderData();
   const share = async () => {
     const url = window.location.href;
-    if (navigator.share) await navigator.share({ title: c.title, url }).catch(() => {});
-    else {
-      await navigator.clipboard.writeText(url);
-      toast.success("تم نسخ الرابط");
-    }
+    await shareLink(c.title, url);
   };
   return (
     <main className="mx-auto max-w-5xl px-4 pb-28 pt-6">

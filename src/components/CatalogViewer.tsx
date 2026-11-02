@@ -1,3 +1,4 @@
+import { shareLink } from "@/components/ShareSheet";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Download, ExternalLink, Loader2, Share2, X } from "lucide-react";
@@ -30,11 +31,7 @@ export function CatalogViewer({ id, onClose }: { id: string | null; onClose: () 
 
   const share = async () => {
     const url = `${window.location.origin}/catalog/${id}`;
-    if (navigator.share) await navigator.share({ title: c?.title ?? "كتالوج", url }).catch(() => {});
-    else {
-      await navigator.clipboard.writeText(url);
-      toast.success("تم نسخ الرابط");
-    }
+    await shareLink(c?.title ?? "كتالوج", url);
   };
 
   return (
