@@ -88,7 +88,8 @@ function Index() {
   useEffect(() => {
     try { localStorage.setItem("catalogs-list", JSON.stringify(data)); } catch {}
     const t = setTimeout(() => {
-      downloadAll(data.catalogs.map((c) => c.id), fetchCatalog, (done, total) => setSaved({ done, total }));
+      // Only catalogs added after the app was built need downloading; bundled ones load from the app.
+      downloadAll(data.catalogs.map((c) => c.id), fetchCatalog, (done, total) => setSaved(done < total ? { done, total } : null));
     }, 1500);
     return () => clearTimeout(t);
   }, [data, fetchCatalog]);

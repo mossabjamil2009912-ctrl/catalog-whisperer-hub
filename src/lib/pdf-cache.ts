@@ -34,6 +34,13 @@ export function loadPdfBytes(id: string, url: string): Promise<ArrayBuffer> {
       const cache = "caches" in window ? await caches.open(CACHE).catch(() => null) : null;
       const hit = await cache?.match(key);
       if (hit) return hit.arrayBuffer();
+      // Catalogs bundled inside the app itself.
+      const local = await fetch(`/catalogs/${id}.pdf`).catch(() => null);
+      if (local?.ok && (local.headers.get("content-type") ?? "").includes("pdf")) {
+        const buf = await local.arrayBuffer();
+        cache?.put(key, new Response(buf.slice(0), { headers: { "content-type": "application/pdf" } })).catch(() => {});
+        return buf;
+      }
       if (!url) throw new Error("offline");
       const res = await fetch(url);
       if (!res.ok) throw new Error("fetch failed");
