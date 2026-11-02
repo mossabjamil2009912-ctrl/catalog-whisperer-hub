@@ -80,6 +80,7 @@ function Dashboard({ code }: { code: string }) {
   const [desc, setDesc] = useState("");
   const [keywords, setKeywords] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [language, setLanguage] = useState("ar");
   const [status, setStatus] = useState<string | null>(null);
   const [newCat, setNewCat] = useState("");
 
@@ -104,6 +105,7 @@ function Dashboard({ code }: { code: string }) {
           description: desc.trim(),
           keywords: keywords.trim(),
           category_id: categoryId || null,
+          language,
           file_path: u.filePath,
           cover_path: r2.error ? null : u.coverPath,
           page_count: pageCount,
@@ -146,6 +148,10 @@ function Dashboard({ code }: { code: string }) {
           <option value="">بدون قسم</option>
           {data?.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
+        <select value={language} onChange={(e) => setLanguage(e.target.value)} aria-label="لغة الكتالوج" className={field}>
+          <option value="ar">عربي</option>
+          <option value="en">English</option>
+        </select>
         <button disabled={!!status} className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-semibold text-primary-foreground disabled:opacity-60">
           {status ? <><Loader2 className="h-5 w-5 animate-spin" /> {status}</> : <><Upload className="h-5 w-5" /> رفع الكتالوج</>}
         </button>
@@ -179,7 +185,7 @@ function Dashboard({ code }: { code: string }) {
         <h2 className="text-lg font-semibold">الكتالوجات ({data?.catalogs.length ?? 0})</h2>
         {data?.catalogs.map((c) => (
           <div key={c.id} className="flex items-center justify-between gap-2 border-b border-border py-2 last:border-0">
-            <Link to="/catalog/$id" params={{ id: c.id }} className="truncate hover:text-primary">{c.title}</Link>
+            <Link to="/catalog/$id" params={{ id: c.id }} className="truncate hover:text-primary">{c.title} <span className="text-xs text-muted-foreground">({c.language === "en" ? "EN" : "عربي"})</span></Link>
             <button onClick={async () => { if (confirm(`حذف ${c.title}؟`)) { await del({ data: { code, id: c.id } }); refresh(); } }} aria-label="حذف">
               <Trash2 className="h-4 w-4 text-destructive" />
             </button>
