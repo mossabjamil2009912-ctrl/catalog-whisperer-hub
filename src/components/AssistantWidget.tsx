@@ -123,7 +123,7 @@ export function AssistantWidget() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="اكتب سؤالك..."
-              className="flex-1 rounded-xl border border-input bg-background px-3 py-2 text-base outline-none focus:border-primary"
+              className="flex-1 rounded-xl border-2 border-foreground bg-background px-3 py-2 text-base outline-none focus:border-primary"
             />
             <button
               disabled={busy || !input.trim()}
