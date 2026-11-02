@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AssistantWidget } from "@/components/AssistantWidget";
 import { Toaster } from "@/components/ui/sonner";
 import { ShareSheet } from "@/components/ShareSheet";
+import { registerAppSw } from "@/lib/register-sw";
 
 function NotFoundComponent() {
   return (
@@ -85,6 +86,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "كل كتالوجات منتجاتنا في مكان واحد مع مساعد ذكي." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "theme-color", content: "#1f1f22" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -95,6 +97,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
   shellComponent: RootShell,
@@ -119,6 +123,9 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => {
+    registerAppSw();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
