@@ -68,6 +68,17 @@ export default defineConfig({
               options: { cacheName: "assets" },
             },
             {
+              // Locally bundled catalog PDFs and covers: cache on first open, work offline after.
+              urlPattern: ({ url }) =>
+                url.origin === self.location.origin && url.pathname.startsWith("/catalogs/"),
+              handler: "CacheFirst",
+              options: {
+                cacheName: "catalog-files",
+                expiration: { maxEntries: 200 },
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
+            {
               urlPattern: ({ url }) =>
                 /fonts\.(googleapis|gstatic)\.com|cdn\.jsdelivr\.net|unpkg\.com/.test(url.host),
               handler: "CacheFirst",
