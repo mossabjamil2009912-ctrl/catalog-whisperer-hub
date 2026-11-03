@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CatalogIdRouteImport } from './routes/catalog.$id'
+import { Route as ApiPublicAssistantRouteImport } from './routes/api/public/assistant'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +29,44 @@ const CatalogIdRoute = CatalogIdRouteImport.update({
   path: '/catalog/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAssistantRoute = ApiPublicAssistantRouteImport.update({
+  id: '/api/public/assistant',
+  path: '/api/public/assistant',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/catalog/$id': typeof CatalogIdRoute
+  '/api/public/assistant': typeof ApiPublicAssistantRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/catalog/$id': typeof CatalogIdRoute
+  '/api/public/assistant': typeof ApiPublicAssistantRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/catalog/$id': typeof CatalogIdRoute
+  '/api/public/assistant': typeof ApiPublicAssistantRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/catalog/$id'
+  fullPaths: '/' | '/admin' | '/catalog/$id' | '/api/public/assistant'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/catalog/$id'
-  id: '__root__' | '/' | '/admin' | '/catalog/$id'
+  to: '/' | '/admin' | '/catalog/$id' | '/api/public/assistant'
+  id: '__root__' | '/' | '/admin' | '/catalog/$id' | '/api/public/assistant'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   CatalogIdRoute: typeof CatalogIdRoute
+  ApiPublicAssistantRoute: typeof ApiPublicAssistantRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +92,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CatalogIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/assistant': {
+      id: '/api/public/assistant'
+      path: '/api/public/assistant'
+      fullPath: '/api/public/assistant'
+      preLoaderRoute: typeof ApiPublicAssistantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +106,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   CatalogIdRoute: CatalogIdRoute,
+  ApiPublicAssistantRoute: ApiPublicAssistantRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
