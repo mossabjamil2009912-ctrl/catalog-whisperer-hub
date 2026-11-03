@@ -135,8 +135,8 @@ function Index() {
   }, [data.catalogs, q, cat, fuzzy]);
 
   return (
-    <main className="mx-auto min-h-screen max-w-6xl px-4 pb-28 pt-10">
-      <header className="mb-8 text-center">
+    <main className="mx-auto min-h-screen max-w-6xl px-4 pb-28 pt-4">
+      <header className="mb-4 text-center">
         <img src={logo.url} alt="ACTES" className="mx-auto mb-4 h-14 w-auto object-contain sm:h-16" />
         <h1 className="text-3xl font-bold sm:text-4xl">
           مكتبة <span className="text-[#e85d3a]">الكتالوجات</span>
@@ -150,7 +150,7 @@ function Index() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="ابحث باسم المنتج أو الموديل أو القدرة..."
-          className="w-full rounded-2xl border-2 border-foreground bg-card py-4 pl-4 pr-12 text-lg outline-none transition focus:border-primary focus:shadow-glow"
+          className="w-full rounded-2xl border-2 border-foreground bg-card py-4 pl-4 pr-12 text-lg outline-none transition focus:border-emerald-500"
         />
       </div>
 
