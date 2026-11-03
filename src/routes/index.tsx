@@ -84,15 +84,12 @@ function Index() {
     window.addEventListener("recent-changed", sync);
     return () => window.removeEventListener("recent-changed", sync);
   }, []);
-  const [saved, setSaved] = useState<{ done: number; total: number } | null>(null);
   useEffect(() => {
     try { localStorage.setItem("catalogs-list", JSON.stringify(data)); } catch {}
-    const t = setTimeout(() => {
-      // Only catalogs added after the app was built need downloading; bundled ones load from the app.
-      downloadAll(data.catalogs.map((c) => c.id), fetchCatalog, (done, total) => setSaved(done < total ? { done, total } : null));
-    }, 1500);
+    // Warm up the PDF viewer engine so the first catalog opens instantly.
+    const t = setTimeout(() => { import("pdfjs-dist"); import("pdfjs-dist/build/pdf.worker.min.mjs?url"); }, 800);
     return () => clearTimeout(t);
-  }, [data, fetchCatalog]);
+  }, [data]);
   const recent = recentIds.map((id) => data.catalogs.find((c) => c.id === id)).filter((c): c is (typeof data.catalogs)[number] => !!c);
   const openCover = data.catalogs.find((c) => c.id === openId)?.cover_url ?? null;
 
@@ -130,13 +127,6 @@ function Index() {
           مكتبة <span className="text-[#e85d3a]">الكتالوجات</span>
         </h1>
         <p className="mt-2 text-muted-foreground">ابحث عن كتالوج المنتج</p>
-        {saved && (
-          <p className="mt-2 text-xs text-muted-foreground">
-            {saved.done < saved.total
-              ? `جاري حفظ الكتالوجات للعمل بدون إنترنت… ${saved.done}/${saved.total}`
-              : `✓ جميع الكتالوجات (${saved.total}) محفوظة وتعمل بدون إنترنت`}
-          </p>
-        )}
       </header>
 
       <div className="relative mx-auto mb-5 max-w-2xl">
