@@ -134,8 +134,8 @@ export async function runAssistant(data: { messages: Msg[] }) {
     const prev = dg(userMsgs[userMsgs.length - 2]?.content ?? "");
 
     const [{ data: a }, { data: b }, { data: cats }] = await Promise.all([
-      sb.rpc("search_chunks", { q: last, lim: 10 }),
-      prev ? sb.rpc("search_chunks", { q: `${prev} ${last}`, lim: 6 }) : Promise.resolve({ data: [] }),
+      sb.rpc("search_chunks", { q: last, lim: 7 }),
+      prev ? sb.rpc("search_chunks", { q: `${prev} ${last}`, lim: 4 }) : Promise.resolve({ data: [] }),
       sb.from("catalogs").select("id,title,keywords"),
     ]);
     const seen = new Set<string>();
