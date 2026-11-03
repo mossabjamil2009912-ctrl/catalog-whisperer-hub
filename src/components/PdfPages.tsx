@@ -39,7 +39,7 @@ export function PdfPages({ id, url, cover }: { id: string; url: string; cover?: 
         }).promise;
         if (cancelled) return;
         const width = box.clientWidth || 800;
-        const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+        const dpr = Math.min(window.devicePixelRatio || 1, 3);
         const pages = await Promise.all(Array.from({ length: pdf.numPages }, (_, i) => pdf.getPage(i + 1)));
         if (cancelled) return;
         const canvases = pages.map((page) => {
