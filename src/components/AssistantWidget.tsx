@@ -39,8 +39,8 @@ export function AssistantWidget() {
     const voice = male ?? voices[0]!;
     u.voice = voice;
     u.lang = voice.lang;
-    u.rate = 1.1;
-    u.pitch = male ? 1 : 0.8;
+    u.rate = 1.15;
+    u.pitch = male ? 1 : 0.85;
     u.onend = () => setPlaying((p) => (p === idx ? null : p));
     u.onerror = () => setPlaying((p) => (p === idx ? null : p));
     window.speechSynthesis.speak(u);
