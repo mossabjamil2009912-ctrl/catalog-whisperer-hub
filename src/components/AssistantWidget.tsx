@@ -84,7 +84,7 @@ export function AssistantWidget() {
       | undefined;
     if (!SR) return false;
     const r = new SR();
-    r.lang = "ar-SA";
+    r.lang = "ar-YE";
     r.interimResults = false;
     r.continuous = false;
     let got = "";
