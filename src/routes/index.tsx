@@ -7,7 +7,7 @@ import { FileText, Search, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { CatalogViewer } from "@/components/CatalogViewer";
 import { getCatalog, listCatalogs, searchCatalogs } from "@/lib/catalog.functions";
-import { downloadAll, getRecent, prefetchCatalog } from "@/lib/pdf-cache";
+import { getRecent, prefetchCatalog } from "@/lib/pdf-cache";
 const logo = { url: "/actes-logo.png" };
 
 export const catalogsQuery = queryOptions({
