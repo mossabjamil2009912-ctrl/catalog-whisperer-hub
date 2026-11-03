@@ -155,7 +155,7 @@ export async function runAssistant(data: { messages: Msg[] }) {
       sb.rpc("search_chunks", { q: last, lim: isCompare ? 6 : 7 }),
       prev ? sb.rpc("search_chunks", { q: `${prev} ${last}`, lim: 4 }) : Promise.resolve({ data: [] }),
       sb.from("catalogs").select("id,title,keywords"),
-      ...(parts.length > 1 ? parts.slice(0, 4).map((p) => sb.rpc("search_chunks", { q: p, lim: 5 })) : []),
+      ...(parts.length > 1 ? parts.slice(0, 4).map((p) => sb.rpc("search_chunks", { q: p, lim: 7 })) : []),
     ]);
     const seen = new Set<string>();
     const chunks = [...(a ?? []), ...((b as typeof a) ?? []), ...partRes.flatMap((r) => (r.data as typeof a) ?? [])].filter((c) => {
