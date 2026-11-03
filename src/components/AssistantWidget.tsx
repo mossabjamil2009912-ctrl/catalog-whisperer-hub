@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Send, X, Loader2 } from "lucide-react";
+import { Send, X, Loader2, Mic, Square, Volume2 } from "lucide-react";
 import { askAssistant } from "@/lib/catalog.functions";
 const logo = { url: "/actes-logo.png" };
 
@@ -15,14 +15,79 @@ export function AssistantWidget() {
   const [busy, setBusy] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const endRef = useRef<HTMLDivElement>(null);
+  const [rec, setRec] = useState(false);
+  const [playing, setPlaying] = useState<number | null>(null);
+  const recRef = useRef<MediaRecorder | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  function stopAudio() {
+    audioRef.current?.pause();
+    audioRef.current = null;
+    setPlaying(null);
+  }
+
+  async function speak(text: string, idx: number) {
+    stopAudio();
+    setPlaying(idx);
+    try {
+      const r = await fetch("/api/public/speak", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (!r.ok) throw new Error();
+      const url = URL.createObjectURL(await r.blob());
+      const a = new Audio(url);
+      audioRef.current = a;
+      a.onended = () => { setPlaying((p) => (p === idx ? null : p)); URL.revokeObjectURL(url); };
+      await a.play();
+    } catch {
+      setPlaying(null);
+    }
+  }
+
+  async function toggleRec() {
+    if (rec) { recRef.current?.stop(); return; }
+    stopAudio();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+      mr.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+      mr.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        setRec(false);
+        const blob = new Blob(chunks, { type: mr.mimeType || "audio/webm" });
+        if (blob.size < 1000) return;
+        setBusy(true);
+        try {
+          const r = await fetch("/api/public/transcribe", { method: "POST", headers: { "content-type": blob.type }, body: blob });
+          const { text } = (await r.json()) as { text?: string };
+          setBusy(false);
+          if (text) await send(text, true);
+          else setMsgs((m) => [...m, { role: "assistant", content: "لم أسمعك جيداً، حاول مرة أخرى." }]);
+        } catch {
+          setBusy(false);
+          setMsgs((m) => [...m, { role: "assistant", content: "تعذر فهم الصوت، حاول مرة أخرى." }]);
+        }
+      };
+      recRef.current = mr;
+      mr.start();
+      setRec(true);
+    } catch {
+      setMsgs((m) => [...m, { role: "assistant", content: "يرجى السماح باستخدام المايك لتتحدث معي." }]);
+    }
+  }
+
+  useEffect(() => () => { recRef.current?.state === "recording" && recRef.current.stop(); audioRef.current?.pause(); }, []);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [msgs, busy]);
 
-  async function send(text: string) {
+  async function send(text: string, voice = false) {
     const q = text.trim();
-    if (!q || busy) return;
+    if (!q) return;
     const next = [...msgs, { role: "user" as const, content: q }];
     setMsgs(next);
     setInput("");
@@ -30,6 +95,7 @@ export function AssistantWidget() {
     try {
       const res = await ask({ data: { messages: next.map(({ role, content }) => ({ role, content })) } });
       setMsgs((m) => [...m, { role: "assistant", content: res.answer, sources: res.sources }]);
+      if (voice) void speak(res.answer, next.length);
     } catch {
       setMsgs((m) => [...m, { role: "assistant", content: "عذراً، حدث خطأ. حاول مرة أخرى." }]);
     } finally {
@@ -67,7 +133,7 @@ export function AssistantWidget() {
                 </div>
               </div>
             </div>
-            <button onClick={() => setOpen(false)} aria-label="إغلاق">
+            <button onClick={() => { stopAudio(); setOpen(false); }} aria-label="إغلاق">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -85,6 +151,17 @@ export function AssistantWidget() {
                   }`}
                 >
                   {m.content}
+                  {m.role === "assistant" && i > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => (playing === i ? stopAudio() : speak(m.content, i))}
+                      aria-label={playing === i ? "إيقاف الصوت" : "استمع"}
+                      className="mt-1 flex items-center gap-1 text-xs text-[#2b5480]"
+                    >
+                      {playing === i ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-4 w-4" />}
+                      {playing === i ? "إيقاف" : "استمع"}
+                    </button>
+                  )}
                   {m.sources && m.sources.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">
                       {m.sources.map((s) => (
@@ -119,10 +196,19 @@ export function AssistantWidget() {
             }}
             className="flex gap-2 border-t border-[#d6d9e0] p-3"
           >
+            <button
+              type="button"
+              onClick={toggleRec}
+              disabled={busy && !rec}
+              aria-label={rec ? "إيقاف التسجيل وإرسال" : "تحدث بالصوت"}
+              className={`rounded-xl px-3 text-white disabled:opacity-50 ${rec ? "animate-pulse bg-red-600" : "bg-[#2b5480]"}`}
+            >
+              {rec ? <Square className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+            </button>
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="اكتب سؤالك..."
+              placeholder={rec ? "جاري التسجيل... اضغط للإرسال" : "اكتب سؤالك أو اضغط المايك..."}
               className="flex-1 rounded-xl border-2 border-[#c7cbd3] bg-white px-3 py-2 text-base text-[#1f1f22] outline-none placeholder:text-[#9ca3af] focus:border-emerald-500"
             />
             <button
