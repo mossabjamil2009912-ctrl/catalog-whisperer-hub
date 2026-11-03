@@ -52,10 +52,20 @@ export function AssistantWidget() {
         <div className="fixed inset-x-3 bottom-3 z-50 flex h-[78vh] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-glow sm:inset-x-auto sm:left-5 sm:w-[400px]">
           <div className="flex items-center justify-between border-b border-border bg-foreground px-4 py-3 text-background">
             <div className="flex items-center gap-2 font-semibold">
-              <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-card p-1">
+              <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-card p-1">
                 <img src={logo.url} alt="ACTES" className="h-full w-full object-contain" />
+                <span className="absolute -bottom-0.5 -left-0.5 h-3 w-3 rounded-full border-2 border-background bg-emerald-500" />
               </span>
-              المساعد الذكي
+              <div className="leading-tight">
+                <div>المساعد الذكي</div>
+                <div className="flex items-center gap-1 text-xs font-normal text-emerald-600">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                  </span>
+                  متصل الآن
+                </div>
+              </div>
             </div>
             <button onClick={() => setOpen(false)} aria-label="إغلاق">
               <X className="h-5 w-5" />
