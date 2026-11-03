@@ -133,13 +133,21 @@ export async function runAssistant(data: { messages: Msg[] }) {
     const last = dg(userMsgs[userMsgs.length - 1]?.content ?? "");
     const prev = dg(userMsgs[userMsgs.length - 2]?.content ?? "");
 
-    const [{ data: a }, { data: b }, { data: cats }] = await Promise.all([
-      sb.rpc("search_chunks", { q: last, lim: 7 }),
+    // Split comparison questions into separate product parts so each product gets its own specs.
+    const parts = last
+      .split(/\s+(?:و|مع|vs\.?|versus|or|أو|او|and)\s+|،|,|\s+بين\s+|قارن|مقارنة|الفرق/i)
+      .map((s) => s.trim())
+      .filter((s) => s.length >= 2);
+    const isCompare = parts.length > 1 || /قارن|مقارن|الفرق|افضل|أفضل|vs|compare/i.test(last);
+
+    const [{ data: a }, { data: b }, { data: cats }, ...partRes] = await Promise.all([
+      sb.rpc("search_chunks", { q: last, lim: isCompare ? 6 : 7 }),
       prev ? sb.rpc("search_chunks", { q: `${prev} ${last}`, lim: 4 }) : Promise.resolve({ data: [] }),
       sb.from("catalogs").select("id,title,keywords"),
+      ...(parts.length > 1 ? parts.slice(0, 4).map((p) => sb.rpc("search_chunks", { q: p, lim: 5 })) : []),
     ]);
     const seen = new Set<string>();
-    const chunks = [...(a ?? []), ...((b as typeof a) ?? [])].filter((c) => {
+    const chunks = [...(a ?? []), ...((b as typeof a) ?? []), ...partRes.flatMap((r) => (r.data as typeof a) ?? [])].filter((c) => {
       const k = `${c.catalog_id}-${c.page}-${c.content.slice(0, 40)}`;
       if (seen.has(k)) return false;
       seen.add(k);
