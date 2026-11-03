@@ -39,8 +39,8 @@ export function AssistantWidget() {
     const voice = male ?? voices[0]!;
     u.voice = voice;
     u.lang = voice.lang;
-    u.rate = 1.1;
-    u.pitch = male ? 1 : 0.8;
+    u.rate = 1.15;
+    u.pitch = male ? 1 : 0.85;
     u.onend = () => setPlaying((p) => (p === idx ? null : p));
     u.onerror = () => setPlaying((p) => (p === idx ? null : p));
     window.speechSynthesis.speak(u);
@@ -50,7 +50,8 @@ export function AssistantWidget() {
   async function speak(text: string, idx: number) {
     stopAudio();
     setPlaying(idx);
-    // Yemeni-accent voice comes from the server; phone voice only as fallback.
+    // Instant: phone's built-in voice first; server voice only if unavailable.
+    if (speakLocal(text, idx)) return;
     try {
       const r = await fetch("/api/public/speak", {
         method: "POST",
