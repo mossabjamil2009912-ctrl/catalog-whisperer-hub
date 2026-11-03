@@ -13,6 +13,8 @@ export function PdfPages({ id, url, cover }: { id: string; url: string; cover?: 
 
   useEffect(() => {
     let cancelled = false;
+    let doc: { destroy: () => Promise<void> } | null = null;
+    const tasks: { cancel: () => void }[] = [];
 
     const box = ref.current;
     if (!box) return;
@@ -26,17 +28,20 @@ export function PdfPages({ id, url, cover }: { id: string; url: string; cover?: 
           import("pdfjs-dist/build/pdf.worker.min.mjs?url"),
           loadPdfBytes(id, url),
         ]);
+        if (cancelled) return;
         pdfjs.GlobalWorkerOptions.workerSrc = workerMod.default;
-        const cdn = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}`;
-        const pdf = await pdfjs.getDocument({
+        // Font helpers are bundled in the app: no internet wait (Arabic fonts needed these).
+        const task = pdfjs.getDocument({
           data: new Uint8Array(data.slice(0)),
-          cMapUrl: `${cdn}/cmaps/`,
+          cMapUrl: "/pdfjs/cmaps/",
           cMapPacked: true,
-          standardFontDataUrl: `${cdn}/standard_fonts/`,
-          wasmUrl: `${cdn}/wasm/`,
+          standardFontDataUrl: "/pdfjs/standard_fonts/",
+          wasmUrl: "/pdfjs/wasm/",
           useSystemFonts: false,
           disableFontFace: true,
-        }).promise;
+        });
+        doc = task;
+        const pdf = await task.promise;
         if (cancelled) return;
         const width = box.clientWidth || 800;
         const dpr = Math.min(window.devicePixelRatio || 1, 3);
@@ -50,19 +55,35 @@ export function PdfPages({ id, url, cover }: { id: string; url: string; cover?: 
           box.appendChild(canvas);
           return canvas;
         });
-        // Render all pages together so both pages appear at once.
-        await Promise.all(
-          pages.map(async (page, i) => {
-            const b = page.getViewport({ scale: 1 });
-            // Sharp text when zoomed: render ~2.5x screen pixels, capped for phone memory.
-            const target = Math.min(Math.max(width * dpr * 2.5, 1600), 2600);
-            const viewport = page.getViewport({ scale: target / b.width });
-            const canvas = canvases[i]!;
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-            await page.render({ canvas, canvasContext: canvas.getContext("2d")!, viewport }).promise;
-          }),
-        );
+        const draw = async (i: number, target: number) => {
+          const page = pages[i]!;
+          const b = page.getViewport({ scale: 1 });
+          const viewport = page.getViewport({ scale: target / b.width });
+          const off = document.createElement("canvas");
+          off.width = viewport.width;
+          off.height = viewport.height;
+          const t = page.render({ canvas: off, canvasContext: off.getContext("2d")!, viewport });
+          tasks.push(t);
+          await t.promise;
+          if (cancelled) return;
+          const c = canvases[i]!;
+          c.width = off.width;
+          c.height = off.height;
+          c.getContext("2d")!.drawImage(off, 0, 0);
+        };
+        // 1) Fast pass at screen sharpness, one page after another (page 1 shows first).
+        const quick = Math.min(Math.max(width * dpr, 900), 1400);
+        for (let i = 0; i < pages.length; i++) {
+          await draw(i, quick);
+          if (cancelled) return;
+          if (i === 0) setLoading(false);
+        }
+        // 2) Sharp pass for zooming, done quietly afterwards.
+        const sharp = Math.min(Math.max(width * dpr * 2.5, 1600), 2400);
+        for (let i = 0; i < pages.length; i++) {
+          await draw(i, sharp);
+          if (cancelled) return;
+        }
       } catch {
         if (!cancelled) setError(true);
       } finally {
@@ -71,7 +92,8 @@ export function PdfPages({ id, url, cover }: { id: string; url: string; cover?: 
     })();
     return () => {
       cancelled = true;
-
+      tasks.forEach((t) => { try { t.cancel(); } catch {} });
+      doc?.destroy().catch(() => {});
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
