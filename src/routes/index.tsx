@@ -150,7 +150,7 @@ function Index() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="ابحث باسم المنتج أو الموديل أو القدرة..."
-          className="w-full rounded-2xl border-2 border-foreground bg-card py-4 pl-4 pr-12 text-lg outline-none transition focus:border-emerald-500"
+          className="w-full rounded-2xl border-2 border-foreground bg-card py-4 pl-4 pr-12 text-lg outline-none transition placeholder:text-sm focus:border-emerald-500"
         />
       </div>
 
