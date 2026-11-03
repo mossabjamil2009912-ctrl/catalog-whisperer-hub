@@ -34,15 +34,15 @@ export default defineConfig({
             {
               urlPattern: ({ request, url }) =>
                 request.mode === "navigate" && !url.pathname.startsWith("/~oauth"),
-              handler: "NetworkFirst",
-              options: { cacheName: "pages", networkTimeoutSeconds: 4 },
+              handler: "StaleWhileRevalidate",
+              options: { cacheName: "pages" },
             },
             {
               // Catalog list / details server functions (GET) — usable offline.
               urlPattern: ({ url, request }) =>
                 request.method === "GET" && url.pathname.startsWith("/_serverFn"),
-              handler: "NetworkFirst",
-              options: { cacheName: "api", networkTimeoutSeconds: 4 },
+              handler: "StaleWhileRevalidate",
+              options: { cacheName: "api" },
             },
             {
               // Catalog cover images: signed links change, so cache by path only.
