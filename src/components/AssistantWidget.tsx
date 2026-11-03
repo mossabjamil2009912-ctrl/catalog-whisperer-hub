@@ -36,8 +36,9 @@ export function AssistantWidget() {
     if (!voices.length) return false;
     const male = voices.find((v) => /male|man|maged|tarik|naayf|hamed|ذكر/i.test(v.name) && !/female/i.test(v.name));
     const u = new SpeechSynthesisUtterance(text);
-    u.voice = male ?? voices[0];
-    u.lang = u.voice.lang;
+    const voice = male ?? voices[0]!;
+    u.voice = voice;
+    u.lang = voice.lang;
     u.rate = 1.1;
     u.pitch = male ? 1 : 0.8;
     u.onend = () => setPlaying((p) => (p === idx ? null : p));
@@ -74,7 +75,7 @@ export function AssistantWidget() {
   // Fast path: on-device speech recognition (text appears instantly, auto-ends on silence).
   function recLocal(): boolean {
     const W = window as unknown as Record<string, unknown>;
-    const SR = (W.SpeechRecognition || W.webkitSpeechRecognition) as
+    const SR = (W["SpeechRecognition"] || W["webkitSpeechRecognition"]) as
       | (new () => {
           lang: string; interimResults: boolean; continuous: boolean;
           onresult: (e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void;
@@ -87,7 +88,7 @@ export function AssistantWidget() {
     r.interimResults = false;
     r.continuous = false;
     let got = "";
-    r.onresult = (e) => { got = Array.from(e.results).map((x) => x[0].transcript).join(" "); };
+    r.onresult = (e) => { got = Array.from(e.results).map((x) => x[0]?.transcript ?? "").join(" "); };
     r.onerror = () => {};
     r.onend = () => {
       setRec(false);
