@@ -13,7 +13,7 @@ export function PdfPages({ id, url, cover }: { id: string; url: string; cover?: 
 
   useEffect(() => {
     let cancelled = false;
-    let observer: IntersectionObserver | null = null;
+
     const box = ref.current;
     if (!box) return;
     box.innerHTML = "";
@@ -39,42 +39,28 @@ export function PdfPages({ id, url, cover }: { id: string; url: string; cover?: 
         }).promise;
         if (cancelled) return;
         const width = box.clientWidth || 800;
-        const dpr = Math.min((window.devicePixelRatio || 1) * 2, 4);
-        const first = await pdf.getPage(1);
-        const base = first.getViewport({ scale: 1 });
-        const ratio = base.height / base.width;
-
-        const render = async (i: number, canvas: HTMLCanvasElement) => {
-          const page = i === 1 ? first : await pdf.getPage(i);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+        const pages = await Promise.all(Array.from({ length: pdf.numPages }, (_, i) => pdf.getPage(i + 1)));
+        if (cancelled) return;
+        const canvases = pages.map((page) => {
           const b = page.getViewport({ scale: 1 });
-          const viewport = page.getViewport({ scale: (width / b.width) * dpr });
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-          canvas.style.aspectRatio = "";
-          await page.render({ canvas, canvasContext: canvas.getContext("2d")!, viewport }).promise;
-        };
-
-        observer = new IntersectionObserver(
-          (entries) => {
-            for (const e of entries) {
-              if (!e.isIntersecting) continue;
-              const c = e.target as HTMLCanvasElement;
-              observer?.unobserve(c);
-              render(Number(c.dataset["page"]), c).catch(() => {});
-            }
-          },
-          { rootMargin: "800px 0px" },
-        );
-
-        for (let i = 1; i <= pdf.numPages; i++) {
           const canvas = document.createElement("canvas");
-          canvas.dataset["page"] = String(i);
-          canvas.style.aspectRatio = `1 / ${ratio}`;
+          canvas.style.aspectRatio = `${b.width} / ${b.height}`;
           canvas.className = "mb-2 block w-full rounded-lg bg-white shadow";
           box.appendChild(canvas);
-          if (i > 1) observer.observe(canvas);
-          else await render(1, canvas);
-        }
+          return canvas;
+        });
+        // Render all pages together so both pages appear at once.
+        await Promise.all(
+          pages.map(async (page, i) => {
+            const b = page.getViewport({ scale: 1 });
+            const viewport = page.getViewport({ scale: (width / b.width) * dpr });
+            const canvas = canvases[i]!;
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            await page.render({ canvas, canvasContext: canvas.getContext("2d")!, viewport }).promise;
+          }),
+        );
       } catch {
         if (!cancelled) setError(true);
       } finally {
@@ -83,7 +69,7 @@ export function PdfPages({ id, url, cover }: { id: string; url: string; cover?: 
     })();
     return () => {
       cancelled = true;
-      observer?.disconnect();
+
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
