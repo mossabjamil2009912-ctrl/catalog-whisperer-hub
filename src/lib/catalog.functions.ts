@@ -130,8 +130,19 @@ export async function runAssistant(data: { messages: Msg[] }) {
     const userMsgs = data.messages.filter((m) => m.role === "user");
     const dg = (s: string) =>
       s.replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660)).replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
-    const last = dg(userMsgs[userMsgs.length - 1]?.content ?? "");
-    const prev = dg(userMsgs[userMsgs.length - 2]?.content ?? "");
+    const alias = (s: string) =>
+      s
+        .replace(/دا[يى]|ديي|ديا[يى]/g, " Deye ")
+        .replace(/سول[يى][سز]/g, " Solis ")
+        .replace(/بايلونتك|بيلونتك|بايلون/g, " Pylontech ")
+        .replace(/سانتك|صنتك/g, " Suntech ")
+        .replace(/هايث[يى]وم|ه[يى]ث[يى]وم/g, " HiTHIUM ")
+        .replace(/ل[يى] ?باور/g, " Li Power ")
+        .replace(/([A-Za-z]) +(\d)/g, "$1 $2")
+        .replace(/\s+/g, " ")
+        .trim();
+    const last = alias(dg(userMsgs[userMsgs.length - 1]?.content ?? ""));
+    const prev = alias(dg(userMsgs[userMsgs.length - 2]?.content ?? ""));
 
     // Split comparison questions into separate product parts so each product gets its own specs.
     const parts = last
