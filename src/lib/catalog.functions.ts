@@ -106,7 +106,7 @@ export function cleanMsgs(d: { messages?: Msg[] }) {
 export const askAssistant = createServerFn({ method: "POST" })
   .inputValidator((d: { messages: Msg[] }) => cleanMsgs(d))
   .handler(async ({ data }) => {
-    if (!process.env.LOVABLE_API_KEY) {
+    if (!process.env["LOVABLE_API_KEY"]) {
       // Hosted elsewhere (e.g. Vercel): forward the question to the main app.
       try {
         const r = await fetch(REMOTE_ASSISTANT, {
