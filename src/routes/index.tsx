@@ -13,6 +13,14 @@ const logo = { url: "/actes-logo.png" };
 export const catalogsQuery = queryOptions({
   queryKey: ["catalogs"],
   queryFn: async () => {
+    // Open instantly from the saved list; refresh it quietly for next time.
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("catalogs-list");
+      if (cached) {
+        listCatalogs().then((d) => { try { localStorage.setItem("catalogs-list", JSON.stringify(d)); } catch {} }).catch(() => {});
+        return JSON.parse(cached) as Awaited<ReturnType<typeof listCatalogs>>;
+      }
+    }
     try {
       const d = await listCatalogs();
       if (typeof window !== "undefined") {
