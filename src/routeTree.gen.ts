@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CatalogIdRouteImport } from './routes/catalog.$id'
 import { Route as ApiPublicAssistantRouteImport } from './routes/api/public/assistant'
+import { Route as ApiPublicSpeakRouteImport } from './routes/api/public/speak'
+import { Route as ApiPublicTranscribeRouteImport } from './routes/api/public/transcribe'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +36,32 @@ const ApiPublicAssistantRoute = ApiPublicAssistantRouteImport.update({
   path: '/api/public/assistant',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSpeakRoute = ApiPublicSpeakRouteImport.update({
+  id: '/api/public/speak',
+  path: '/api/public/speak',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicTranscribeRoute = ApiPublicTranscribeRouteImport.update({
+  id: '/api/public/transcribe',
+  path: '/api/public/transcribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/catalog/$id': typeof CatalogIdRoute
   '/api/public/assistant': typeof ApiPublicAssistantRoute
+  '/api/public/speak': typeof ApiPublicSpeakRoute
+  '/api/public/transcribe': typeof ApiPublicTranscribeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/catalog/$id': typeof CatalogIdRoute
   '/api/public/assistant': typeof ApiPublicAssistantRoute
+  '/api/public/speak': typeof ApiPublicSpeakRoute
+  '/api/public/transcribe': typeof ApiPublicTranscribeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +69,34 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/catalog/$id': typeof CatalogIdRoute
   '/api/public/assistant': typeof ApiPublicAssistantRoute
+  '/api/public/speak': typeof ApiPublicSpeakRoute
+  '/api/public/transcribe': typeof ApiPublicTranscribeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/catalog/$id' | '/api/public/assistant'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/catalog/$id'
+    | '/api/public/assistant'
+    | '/api/public/speak'
+    | '/api/public/transcribe'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/catalog/$id' | '/api/public/assistant'
-  id: '__root__' | '/' | '/admin' | '/catalog/$id' | '/api/public/assistant'
+  to:
+    | '/'
+    | '/admin'
+    | '/catalog/$id'
+    | '/api/public/assistant'
+    | '/api/public/speak'
+    | '/api/public/transcribe'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/catalog/$id'
+    | '/api/public/assistant'
+    | '/api/public/speak'
+    | '/api/public/transcribe'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +104,8 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   CatalogIdRoute: typeof CatalogIdRoute
   ApiPublicAssistantRoute: typeof ApiPublicAssistantRoute
+  ApiPublicSpeakRoute: typeof ApiPublicSpeakRoute
+  ApiPublicTranscribeRoute: typeof ApiPublicTranscribeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +138,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAssistantRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/speak': {
+      id: '/api/public/speak'
+      path: '/api/public/speak'
+      fullPath: '/api/public/speak'
+      preLoaderRoute: typeof ApiPublicSpeakRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/transcribe': {
+      id: '/api/public/transcribe'
+      path: '/api/public/transcribe'
+      fullPath: '/api/public/transcribe'
+      preLoaderRoute: typeof ApiPublicTranscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +160,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   CatalogIdRoute: CatalogIdRoute,
   ApiPublicAssistantRoute: ApiPublicAssistantRoute,
+  ApiPublicSpeakRoute: ApiPublicSpeakRoute,
+  ApiPublicTranscribeRoute: ApiPublicTranscribeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
