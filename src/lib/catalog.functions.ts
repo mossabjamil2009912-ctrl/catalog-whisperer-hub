@@ -130,16 +130,35 @@ export async function runAssistant(data: { messages: Msg[] }) {
     const userMsgs = data.messages.filter((m) => m.role === "user");
     const dg = (s: string) =>
       s.replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660)).replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0));
-    const last = dg(userMsgs[userMsgs.length - 1]?.content ?? "");
-    const prev = dg(userMsgs[userMsgs.length - 2]?.content ?? "");
+    const alias = (s: string) =>
+      s
+        .replace(/دا[يى]|ديي|ديا[يى]/g, " Deye ")
+        .replace(/سول[يى][سز]/g, " Solis ")
+        .replace(/بايلونتك|بيلونتك|بايلون/g, " Pylontech ")
+        .replace(/سانتك|صنتك/g, " Suntech ")
+        .replace(/هايث[يى]وم|ه[يى]ث[يى]وم/g, " HiTHIUM ")
+        .replace(/ل[يى] ?باور/g, " Li Power ")
+        .replace(/([A-Za-z]) +(\d)/g, "$1 $2")
+        .replace(/\s+/g, " ")
+        .trim();
+    const last = alias(dg(userMsgs[userMsgs.length - 1]?.content ?? ""));
+    const prev = alias(dg(userMsgs[userMsgs.length - 2]?.content ?? ""));
 
-    const [{ data: a }, { data: b }, { data: cats }] = await Promise.all([
-      sb.rpc("search_chunks", { q: last, lim: 7 }),
+    // Split comparison questions into separate product parts so each product gets its own specs.
+    const parts = last
+      .split(/\s+(?:و|مع|vs\.?|versus|or|أو|او|and)\s+|،|,|\s+بين\s+|قارن|مقارنة|الفرق/i)
+      .map((s) => s.trim())
+      .filter((s) => s.length >= 2);
+    const isCompare = parts.length > 1 || /قارن|مقارن|الفرق|افضل|أفضل|vs|compare/i.test(last);
+
+    const [{ data: a }, { data: b }, { data: cats }, ...partRes] = await Promise.all([
+      sb.rpc("search_chunks", { q: last, lim: isCompare ? 6 : 7 }),
       prev ? sb.rpc("search_chunks", { q: `${prev} ${last}`, lim: 4 }) : Promise.resolve({ data: [] }),
       sb.from("catalogs").select("id,title,keywords"),
+      ...(parts.length > 1 ? parts.slice(0, 4).map((p) => sb.rpc("search_chunks", { q: p, lim: 7 })) : []),
     ]);
     const seen = new Set<string>();
-    const chunks = [...(a ?? []), ...((b as typeof a) ?? [])].filter((c) => {
+    const chunks = [...(a ?? []), ...((b as typeof a) ?? []), ...partRes.flatMap((r) => (r.data as typeof a) ?? [])].filter((c) => {
       const k = `${c.catalog_id}-${c.page}-${c.content.slice(0, 40)}`;
       if (seen.has(k)) return false;
       seen.add(k);
@@ -158,6 +177,8 @@ export async function runAssistant(data: { messages: Msg[] }) {
 - لا تستخدم كلمة "بطاقة" أبداً للتعبير عن الطاقة أو السعة؛ استخدم كلمة "بقدرة" بدلاً منها (مثال: "بقدرة 1280 واط ساعة").
 - افهم الأسماء المكتوبة بشكل تقريبي (مثل "سوليز 50" = "Solis 50kW").
 - لا تذكر اسم الكتالوج ولا رقم الصفحة ولا أي مصدر.
+- عند طلب مقارنة أو اختيار الأفضل: قدّم مقارنة مختصرة في نقاط قصيرة (القدرة، الجهد، عدد MPPT أو السعة، الكفاءة، أهم ميزة) لكل منتج، ثم سطر واحد بالخلاصة. بدون مقدمات.
+- بعض النصوص العربية في المقتطفات قد تكون مشوشة الحروف؛ اعتمد على الأرقام والموديلات والنسخة الإنجليزية للمنتج نفسه.
 - إذا لم تجد المعلومة فقل بوضوح إنها غير موجودة في الكتالوجات المتاحة.
 
 قائمة الكتالوجات المتاحة:
