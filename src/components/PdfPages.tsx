@@ -13,7 +13,7 @@ export function PdfPages({ id, url, cover }: { id: string; url: string; cover?: 
 
   useEffect(() => {
     let cancelled = false;
-    let observer: IntersectionObserver | null = null;
+
     const box = ref.current;
     if (!box) return;
     box.innerHTML = "";
@@ -55,7 +55,7 @@ export function PdfPages({ id, url, cover }: { id: string; url: string; cover?: 
           pages.map(async (page, i) => {
             const b = page.getViewport({ scale: 1 });
             const viewport = page.getViewport({ scale: (width / b.width) * dpr });
-            const canvas = canvases[i];
+            const canvas = canvases[i]!;
             canvas.width = viewport.width;
             canvas.height = viewport.height;
             await page.render({ canvas, canvasContext: canvas.getContext("2d")!, viewport }).promise;
@@ -69,7 +69,7 @@ export function PdfPages({ id, url, cover }: { id: string; url: string; cover?: 
     })();
     return () => {
       cancelled = true;
-      observer?.disconnect();
+
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
