@@ -54,7 +54,9 @@ export function PdfPages({ id, url, cover }: { id: string; url: string; cover?: 
         await Promise.all(
           pages.map(async (page, i) => {
             const b = page.getViewport({ scale: 1 });
-            const viewport = page.getViewport({ scale: (width / b.width) * dpr });
+            // Sharp text when zoomed: render ~2.5x screen pixels, capped for phone memory.
+            const target = Math.min(Math.max(width * dpr * 2.5, 1600), 2600);
+            const viewport = page.getViewport({ scale: target / b.width });
             const canvas = canvases[i]!;
             canvas.width = viewport.width;
             canvas.height = viewport.height;
