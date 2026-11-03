@@ -53,9 +53,32 @@ export function AssistantWidget() {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mr = new MediaRecorder(stream);
       const chunks: Blob[] = [];
+      // Auto-stop: once speech is heard, stop after ~1.3s of silence (or 15s max / 6s with no speech).
+      const ctx = new AudioContext();
+      const an = ctx.createAnalyser();
+      an.fftSize = 1024;
+      ctx.createMediaStreamSource(stream).connect(an);
+      const buf = new Uint8Array(an.fftSize);
+      const t0 = Date.now();
+      let spoke = false;
+      let lastLoud = Date.now();
+      const iv = window.setInterval(() => {
+        an.getByteTimeDomainData(buf);
+        let sum = 0;
+        for (const v of buf) sum += (v - 128) ** 2;
+        const rms = Math.sqrt(sum / buf.length);
+        const now = Date.now();
+        if (rms > 8) { spoke = true; lastLoud = now; }
+        if ((spoke && now - lastLoud > 1300) || (!spoke && now - t0 > 6000) || now - t0 > 15000) {
+          if (mr.state === "recording") mr.stop();
+        }
+      }, 100);
       mr.ondataavailable = (e) => e.data.size && chunks.push(e.data);
       mr.onstop = async () => {
+        window.clearInterval(iv);
+        void ctx.close();
         stream.getTracks().forEach((t) => t.stop());
+        if (!spoke) { setRec(false); return; }
         setRec(false);
         const blob = new Blob(chunks, { type: mr.mimeType || "audio/webm" });
         if (blob.size < 1000) return;

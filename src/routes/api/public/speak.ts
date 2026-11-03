@@ -28,10 +28,10 @@ export const Route = createFileRoute("/api/public/speak")({
           const { generateSpeech } = await import("@lovable.dev/ai-gateway");
           const audio = await generateSpeech({
             model: "google/gemini-3.1-flash-tts-preview",
-            contents: [{ role: "user", parts: [{ text: `اقرأ النص التالي بالعربية بصوت واضح وودود: ${text}` }] }],
+            contents: [{ role: "user", parts: [{ text: `اقرأ النص التالي بالعربية بصوت رجل واضح وسريع: ${text}` }] }],
             generationConfig: {
               responseModalities: ["AUDIO"],
-              speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } },
+              speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Charon" } } },
             },
           });
           return audio.toResponse({ headers: cors });
