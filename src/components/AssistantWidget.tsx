@@ -50,7 +50,7 @@ export function AssistantWidget() {
   async function speak(text: string, idx: number) {
     stopAudio();
     setPlaying(idx);
-    if (speakLocal(text, idx)) return;
+    // Yemeni-accent voice comes from the server; phone voice only as fallback.
     try {
       const r = await fetch("/api/public/speak", {
         method: "POST",
@@ -64,7 +64,7 @@ export function AssistantWidget() {
       a.onended = () => { setPlaying((p) => (p === idx ? null : p)); URL.revokeObjectURL(url); };
       await a.play();
     } catch {
-      setPlaying(null);
+      if (!speakLocal(text, idx)) setPlaying(null);
     }
   }
 
