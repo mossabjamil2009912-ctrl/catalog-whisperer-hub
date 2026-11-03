@@ -20,15 +20,36 @@ export function AssistantWidget() {
   const recRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  const srRef = useRef<{ stop: () => void } | null>(null);
+
   function stopAudio() {
     audioRef.current?.pause();
     audioRef.current = null;
+    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
     setPlaying(null);
+  }
+
+  // Fast path: device's built-in Arabic voice (instant, no download).
+  function speakLocal(text: string, idx: number): boolean {
+    if (!("speechSynthesis" in window)) return false;
+    const voices = window.speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith("ar"));
+    if (!voices.length) return false;
+    const male = voices.find((v) => /male|man|maged|tarik|naayf|hamed|ذكر/i.test(v.name) && !/female/i.test(v.name));
+    const u = new SpeechSynthesisUtterance(text);
+    u.voice = male ?? voices[0];
+    u.lang = u.voice.lang;
+    u.rate = 1.1;
+    u.pitch = male ? 1 : 0.8;
+    u.onend = () => setPlaying((p) => (p === idx ? null : p));
+    u.onerror = () => setPlaying((p) => (p === idx ? null : p));
+    window.speechSynthesis.speak(u);
+    return true;
   }
 
   async function speak(text: string, idx: number) {
     stopAudio();
     setPlaying(idx);
+    if (speakLocal(text, idx)) return;
     try {
       const r = await fetch("/api/public/speak", {
         method: "POST",
@@ -46,9 +67,43 @@ export function AssistantWidget() {
     }
   }
 
+  useEffect(() => {
+    if ("speechSynthesis" in window) window.speechSynthesis.getVoices();
+  }, []);
+
+  // Fast path: on-device speech recognition (text appears instantly, auto-ends on silence).
+  function recLocal(): boolean {
+    const W = window as unknown as Record<string, unknown>;
+    const SR = (W.SpeechRecognition || W.webkitSpeechRecognition) as
+      | (new () => {
+          lang: string; interimResults: boolean; continuous: boolean;
+          onresult: (e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void;
+          onend: () => void; onerror: () => void; start: () => void; stop: () => void;
+        })
+      | undefined;
+    if (!SR) return false;
+    const r = new SR();
+    r.lang = "ar-SA";
+    r.interimResults = false;
+    r.continuous = false;
+    let got = "";
+    r.onresult = (e) => { got = Array.from(e.results).map((x) => x[0].transcript).join(" "); };
+    r.onerror = () => {};
+    r.onend = () => {
+      setRec(false);
+      srRef.current = null;
+      if (got.trim()) void send(got, true);
+    };
+    try { r.start(); } catch { return false; }
+    srRef.current = r;
+    setRec(true);
+    return true;
+  }
+
   async function toggleRec() {
-    if (rec) { recRef.current?.stop(); return; }
+    if (rec) { srRef.current?.stop(); recRef.current?.stop(); return; }
     stopAudio();
+    if (recLocal()) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mr = new MediaRecorder(stream);
