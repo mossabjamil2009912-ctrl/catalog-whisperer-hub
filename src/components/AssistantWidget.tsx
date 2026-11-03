@@ -49,7 +49,7 @@ export function AssistantWidget() {
         </button>
       )}
       {open && (
-        <div className="fixed inset-x-3 bottom-3 z-50 flex h-[78vh] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-glow sm:inset-x-auto sm:left-5 sm:w-[400px]">
+        <div className="fixed inset-x-3 bottom-3 z-50 flex h-[78vh] flex-col overflow-hidden rounded-2xl border border-border bg-[#eef0f4] text-[#1f1f22] shadow-glow sm:inset-x-auto sm:left-5 sm:w-[400px]">
           <div className="flex items-center justify-between border-b border-border bg-foreground px-4 py-3 text-background">
             <div className="flex items-center gap-2 font-semibold">
               <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-card p-1">
@@ -73,7 +73,7 @@ export function AssistantWidget() {
           </div>
           <div className="flex-1 space-y-3 overflow-y-auto p-4">
             {msgs.length === 0 && (
-              <div className="space-y-3 text-sm text-muted-foreground">
+              <div className="space-y-3 text-sm text-[#4b5563]">
                 <p>مرحباً! اسألني عن أي منتج أو مواصفة في كتالوجاتنا.</p>
               </div>
             )}
@@ -81,7 +81,7 @@ export function AssistantWidget() {
               <div key={i} className={m.role === "user" ? "flex justify-start" : "flex justify-end"}>
                 <div
                   className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2 text-sm leading-relaxed ${
-                    m.role === "user" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+                    m.role === "user" ? "bg-primary text-primary-foreground" : "bg-white text-[#1f1f22] shadow-sm"
                   }`}
                 >
                   {m.content}
@@ -105,7 +105,7 @@ export function AssistantWidget() {
             ))}
             {busy && (
               <div className="flex justify-end">
-                <div className="flex items-center gap-2 rounded-2xl bg-secondary px-4 py-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2 rounded-2xl bg-white px-4 py-2 text-sm text-[#4b5563]">
                   <Loader2 className="h-4 w-4 animate-spin" /> يبحث في الكتالوجات...
                 </div>
               </div>
@@ -117,13 +117,13 @@ export function AssistantWidget() {
               e.preventDefault();
               send(input);
             }}
-            className="flex gap-2 border-t border-border p-3"
+            className="flex gap-2 border-t border-[#d6d9e0] p-3"
           >
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="اكتب سؤالك..."
-              className="flex-1 rounded-xl border-2 border-foreground bg-background px-3 py-2 text-base outline-none focus:border-primary"
+              className="flex-1 rounded-xl border-2 border-[#c7cbd3] bg-white px-3 py-2 text-base text-[#1f1f22] outline-none placeholder:text-[#9ca3af] focus:border-emerald-500"
             />
             <button
               disabled={busy || !input.trim()}
